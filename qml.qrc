@@ -1,0 +1,11 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>Button.qml</file>
+        <file>ClientField.qml</file>
+        <file>puzzle.xml</file>
+        <file>ClickableImage.qml</file>
+        <file>MessageBox.qml</file>
+        <file>ClientCard.qml</file>
+    </qresource>
+</RCC>
