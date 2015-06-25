@@ -143,46 +143,6 @@ QVariant ClientCardModel::data(const QModelIndex &index, int role) const {
     case CmdFlagRole:
         return clientCard->cmdFlag;
         break;
-    case IsShowEquipRole:
-        return clientCard->is_showequip;
-        break;
-    case IsShowTargetRole:
-        return clientCard->is_showtarget;
-        break;
-    case SetEquipTarget:
-        if(!lst)
-            return false;
-        if(clientCard->equipTarget)
-            clientCard->equipTarget->is_showequip = true;
-        if(clientCard->equipped.size())
-            for(auto cit = clientCard->equipped.begin(); cit != clientCard->equipped.end(); ++cit)
-                (*cit)->is_showequip = true;
-        if(clientCard->cardTarget.size())
-            for(auto cit = clientCard->cardTarget.begin(); cit != clientCard->cardTarget.end(); ++cit)
-                (*cit)->is_showtarget = true;
-        if(clientCard->ownerTarget.size())
-            for(auto cit = clientCard->ownerTarget.begin(); cit != clientCard->ownerTarget.end(); ++cit)
-                (*cit)->is_showtarget = true;
-        QMetaObject::invokeMethod(lst,"dataChangedSignal",Qt::QueuedConnection,Q_ARG(int,clientCard->sequence));
-        return true;
-        break;
-    case ResetEquipTarget:
-        if(!lst)
-            return false;
-        if(clientCard->equipTarget)
-            clientCard->equipTarget->is_showequip = false;
-        if(clientCard->equipped.size())
-            for(auto cit = clientCard->equipped.begin(); cit != clientCard->equipped.end(); ++cit)
-                (*cit)->is_showequip = false;
-        if(clientCard->cardTarget.size())
-            for(auto cit = clientCard->cardTarget.begin(); cit != clientCard->cardTarget.end(); ++cit)
-                (*cit)->is_showtarget = false;
-        if(clientCard->ownerTarget.size())
-            for(auto cit = clientCard->ownerTarget.begin(); cit != clientCard->ownerTarget.end(); ++cit)
-                (*cit)->is_showtarget = false;
-        QMetaObject::invokeMethod(lst,"dataChangedSignal",Qt::QueuedConnection,Q_ARG(int,clientCard->sequence));
-        return true;
-        break;
     default:
         break;
     }
@@ -229,10 +189,6 @@ QHash<int, QByteArray> ClientCardModel::roleNames() const{
     roles[PositionRole] = "position";
     roles[IsDisabledRole] = "isDisabled";
     roles[CmdFlagRole] = "cmdFlag";
-    roles[IsShowEquipRole] = "isShowEquip";
-    roles[IsShowTargetRole] = "isShowTarget";
-    roles[SetEquipTarget] = "setEquipTarget";
-    roles[ResetEquipTarget] = "resetEquipTarget";
     return roles;
 }
 

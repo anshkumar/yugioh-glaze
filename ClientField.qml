@@ -608,17 +608,9 @@ Item {
                     }
                     flipped: (position & pos_facedown)? true: false;
                     Image {
+                        id: spellZoneEquipImg1
                         fillMode: Image.PreserveAspectFit
                         anchors.fill: parent
-                        source: {
-                            if(isShowEquip)
-                                return "file:img/marker_equip.png";
-                            else if(isShowTarget)
-                                return "file:img/marker_target.png";
-                            else if(isDisabled && (location & location_onfield) && (position & pos_faceup))
-                                return "file:img/marker_disable.png"
-                            return "";
-                        }
                     }
                 }
             }
@@ -703,18 +695,9 @@ Item {
                     rotation: (position & pos_defence)? 90: 0;
                     flipped: (position & pos_facedown)? true: false;
                     Image {
+                        id: monsterZoneEquipImg1
                         fillMode: Image.PreserveAspectFit
                         anchors.fill: parent
-                        source: {
-                            if(isShowEquip)
-                                return "file:img/marker_equip.png";
-                            else if(isShowTarget)
-                                return "file:img/marker_target.png";
-                            else if(isDisabled && (location & location_onfield) && (position & pos_faceup))
-                                return "file:img/marker_disable.png"
-                            return "";
-
-                        }
                     }
                 }
             }
@@ -908,17 +891,9 @@ Item {
                     }
                     flipped: (position & pos_facedown)? true: false;
                     Image {
+                        id: spellZoneEquipImg2
                         fillMode: Image.PreserveAspectFit
                         anchors.fill: parent
-                        source: {
-                            if(isShowEquip)
-                                return "file:img/marker_equip.png";
-                            else if(isShowTarget)
-                                return "file:img/marker_target.png";
-                            else if(isDisabled && (location & location_onfield) && (position & pos_faceup))
-                                return "file:img/marker_disable.png"
-                            return "";
-                        }
                     }
                 }
             }
@@ -1005,17 +980,9 @@ Item {
                     rotation: (position & pos_defence)? 90: 180;
                     flipped: (position & pos_facedown)? true: false;
                     Image {
+                        id: monsterZoneEquipImg2
                         fillMode: Image.PreserveAspectFit
                         anchors.fill: parent
-                        source: {
-                            if(isShowEquip)
-                                return "file:img/marker_equip.png";
-                            else if(isShowTarget)
-                                return "file:img/marker_target.png";
-                            else if(isDisabled && (location & location_onfield) && (position & pos_faceup))
-                                return "file:img/marker_disable.png"
-                            return "";
-                        }
                     }
                 }
             }
