@@ -7,6 +7,8 @@ Item {
     property string charImage1: "file:img/default_avatar_f_0.png"
     property string charImage2: "file:img/default_avatar_m_0.png"
     signal exitClicked;
+    property string clientname: ""
+    property string hostname: ""
 
     FontLoader {
         id: contentFont
@@ -41,10 +43,20 @@ Item {
             }
             height: player1Image.height/4
             width: charBack1.width - 100
+            Text {
+                anchors.centerIn: parent
+                text: qsTr(hostname)
+                font {
+                    family: contentFont.name
+                    bold: true
+                    pixelSize: 22
+                }
+                color: "#1030e5"
+            }
         }
         Image {
             id: progressBar1
-            source: "file:img/gamescreen_lifepoints_meter_opponent.png"
+            source: "file:img/gamescreen_lifepoints_meter_player.png"
             x: player1Image.width
             width: charName1.width
             height: charName1.height
@@ -100,7 +112,7 @@ Item {
 
             Image {
                 id: lp1Heart
-                source: "file:img/gs_LP_icon_red.png"
+                source: "file:img/gs_LP_icon_blue.png"
                 width: parent.width/5
                 height: parent.height
                 anchors {
@@ -131,7 +143,7 @@ Item {
                     bold: true
                     pixelSize: 22
                 }
-                color: "#ff0000"
+                color: "#1030e5"
             }
         }
 
@@ -155,10 +167,20 @@ Item {
             }
             height: player2Image.height/4
             width: charBack2.width - 100
+            Text {
+                anchors.centerIn: parent
+                text: qsTr(clientname)
+                font {
+                    family: contentFont.name
+                    bold: true
+                    pixelSize: 22
+                }
+                color: "#ff0000"
+            }
         }
         Image {
             id: progressBar2
-            source: "file:img/gamescreen_lifepoints_meter_player.png"
+            source: "file:img/gamescreen_lifepoints_meter_opponent.png"
             x: player2Image.width
             width: charName2.width
             height: charName2.height
@@ -214,7 +236,7 @@ Item {
 
             Image {
                 id: lp2Heart
-                source: "file:img/gs_LP_icon_blue.png"
+                source: "file:img/gs_LP_icon_red.png"
                 width: parent.width/5
                 height: parent.height
                 anchors {
@@ -245,7 +267,7 @@ Item {
                     bold: true
                     pixelSize: 22
                 }
-                color: "#1030e5"
+                color: "#ff0000"
             }
         }
 
@@ -1163,31 +1185,34 @@ Item {
 
     Connections {
         target: duelInfo
-        onQstrLP1Changed: {
-            if(parseInt(lp1Text.text) > duelInfo.qLP1() && duelInfo.qLP1() < 8000)
-                progressBar1.x -= progressBar1.width*(1 - duelInfo.qLP1()/8000);
-            else if(parseInt(lp1Text.text) > duelInfo.qLP1() && duelInfo.qLP1() >= 8000)
+        onLp1Changed: {
+            if(parseInt(lp1Text.text) > duelInfo.lp1() && duelInfo.lp1() < 8000)
+                progressBar1.x -= progressBar1.width*(1 - duelInfo.lp1()/8000);
+            else if(parseInt(lp1Text.text) > duelInfo.lp1() && duelInfo.lp1() >= 8000)
                 progressBar1.x = player1Image.width;
-            else if(parseInt(lp1Text.text) < duelInfo.qLP1() && duelInfo.qLP1() < 8000)
-                progressBar1.x += progressBar1.width*(1 - duelInfo.qLP1()/8000);
-            else if(parseInt(lp1Text.text) < duelInfo.qLP1() && duelInfo.qLP1() >= 8000)
+            else if(parseInt(lp1Text.text) < duelInfo.lp1() && duelInfo.lp1() < 8000)
+                progressBar1.x += progressBar1.width*(1 - duelInfo.lp1()/8000);
+            else if(parseInt(lp1Text.text) < duelInfo.lp1() && duelInfo.lp1() >= 8000)
                 progressBar1.x = player1Image.width;
-            else if(parseInt(lp1Text.text) === duelInfo.qLP1())
+            else if(parseInt(lp1Text.text) === duelInfo.lp1())
             {}
-            lp1Text.text = duelInfo.qLP1();
+            lp1Text.text = duelInfo.lp1();
         }
-        onQstrLP2Changed: {
-            if(parseInt(lp2Text.text) > duelInfo.qLP2() && duelInfo.qLP2() < 8000)
-                progressBar2.x -= progressBar2.width*(1 - duelInfo.qLP2()/8000);
-            else if(parseInt(lp2Text.text) > duelInfo.qLP2() && duelInfo.qLP2() >= 8000)
+        onLp2Changed: {
+            if(parseInt(lp2Text.text) > duelInfo.lp2() && duelInfo.lp2() < 8000)
+                progressBar2.x -= progressBar2.width*(1 - duelInfo.lp2()/8000);
+            else if(parseInt(lp2Text.text) > duelInfo.lp2() && duelInfo.lp2() >= 8000)
                 progressBar2.x = player2Image.width;
-            else if(parseInt(lp2Text.text) < duelInfo.qLP2() && duelInfo.qLP2() < 8000)
-                progressBar2.x += progressBar2.width*(1 - duelInfo.qLP2()/8000);
-            else if(parseInt(lp2Text.text) < duelInfo.qLP2() && duelInfo.qLP2() >= 8000)
+            else if(parseInt(lp2Text.text) < duelInfo.lp2() && duelInfo.lp2() < 8000)
+                progressBar2.x += progressBar2.width*(1 - duelInfo.lp2()/8000);
+            else if(parseInt(lp2Text.text) < duelInfo.lp2() && duelInfo.lp2() >= 8000)
                 progressBar2.x = player2Image.width;
-            else if(parseInt(lp2Text.text) === duelInfo.qLP2())
+            else if(parseInt(lp2Text.text) === duelInfo.lp2())
             {}
-            lp2Text.text = duelInfo.qLP2();
+            lp2Text.text = duelInfo.lp2();
+        }
+        onClientNameChanged: {
+            clientname = duelInfo.clientName();
         }
     }
 

@@ -54,17 +54,22 @@ public:
     unsigned short time_left[2];
 
 public slots:
-    int qLP1() {
+    int lp1() {
         return lp[0];
     }
 
-    int qLP2() {
+    int lp2() {
         return lp[1];
     }
 
+    QString clientName() {
+        return QString::fromWCharArray(clientname);
+    }
+
 signals:
-    void qstrLP1Changed();
-    void qstrLP2Changed();
+    void lp1Changed();
+    void lp2Changed();
+    void clientNameChanged();
 };
 
 // struct FadingUnit{}; // not needed

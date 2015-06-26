@@ -7,7 +7,6 @@ Flipable {
     property bool isEnableDown: false
     property bool downYBehaviour: false
     property bool inside: false
-    property bool temp
     signal showInfo
 
     //Type
@@ -129,7 +128,6 @@ Flipable {
         onEntered: {
             inside = true;
             desTimer.start();
-            temp = setEquipTarget;
             if(isEnableDown) {
                 if(downYBehaviour)
                     parent.y = 30;
@@ -141,7 +139,6 @@ Flipable {
             desTimer.stop();
             inside = false;
             parent.y = 0 ;
-            temp = resetEquipTarget;
         }
 //        onClicked: flipable.flipped = !flipable.flipped
     }

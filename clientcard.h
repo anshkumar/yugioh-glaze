@@ -1,4 +1,3 @@
-// Complete
 #ifndef CLIENTCARD_H
 #define CLIENTCARD_H
 

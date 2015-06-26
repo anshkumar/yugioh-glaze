@@ -660,8 +660,8 @@ bool SingleMode::SinglePlayAnalyze(char* msg, unsigned int len)
             BufferIO::ReadInt8(pbuf); //chain count, always 0
             SinglePlayReload();
 //            mainGame->dField.RefreshAllCards(); // updates the position and rotation
-            emit mainGame->dInfo.qstrLP1Changed();
-            emit mainGame->dInfo.qstrLP2Changed();
+            emit mainGame->dInfo.lp1Changed();
+            emit mainGame->dInfo.lp2Changed();
             break;
         }
         case MSG_AI_NAME: {
@@ -673,6 +673,7 @@ bool SingleMode::SinglePlayAnalyze(char* msg, unsigned int len)
             memcpy(namebuf, begin, len + 1);
             BufferIO::DecodeUTF8(namebuf, wname);
             BufferIO::CopyWStr(wname, mainGame->dInfo.clientname, 20);
+            emit mainGame->dInfo.clientNameChanged();
             break;
         }
         case MSG_SHOW_HINT: {
