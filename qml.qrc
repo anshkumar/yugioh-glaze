@@ -7,5 +7,6 @@
         <file>ClickableImage.qml</file>
         <file>MessageBox.qml</file>
         <file>ClientCard.qml</file>
+        <file>ScrollBar.qml</file>
     </qresource>
 </RCC>

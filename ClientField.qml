@@ -450,6 +450,7 @@ Item {
                 color: "lightgreen"
             }
             Flickable {
+                id: detailFlick
                 anchors {
                     top: cardType.bottom
                     topMargin: 5
@@ -470,6 +471,9 @@ Item {
                     readOnly:true
                 }
             }
+            ScrollBar {
+                flk: detailFlick
+            }
         }
     }
 
@@ -477,8 +481,8 @@ Item {
         id: messageBox
         onClicked: {
             messageBox.visible = false;
-//            game.mySet();
-//            game.setQwMessage(false);
+            game.mySet();
+            game.setQwMessage(false);
         }
     }
 
@@ -1173,13 +1177,13 @@ Item {
     Connections {
         target: game
         onQwMessageChanged: {
-//            if(game.qwMessage() === true) {
-//                messageBox.text = game.qstMessage();
-//                messageBox.visible = true;
-//            }
-//            else {
-//                messageBox.visible = false;
-//            }
+            if(game.qwMessage() === true) {
+                messageBox.text = game.qstMessage();
+                messageBox.visible = true;
+            }
+            else {
+                messageBox.visible = false;
+            }
         }
     }
 

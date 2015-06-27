@@ -59,9 +59,8 @@ int DuelClient::ClientAnalyze(char * msg, unsigned int len)
     {
         mainGame->stMessage = "Error occurs.";
         mainGame->wMessage = true;
-
-        //        mainGame->actionSignal.Reset();
-        //        mainGame->actionSignal.Wait();
+        mainGame->actionSignal.reset();
+        mainGame->actionSignal.wait();
         //        mainGame->closeDoneSignal.Reset();
         //        mainGame->closeSignal.Set();
         //        mainGame->closeDoneSignal.Wait();
@@ -92,9 +91,8 @@ int DuelClient::ClientAnalyze(char * msg, unsigned int len)
         case HINT_MESSAGE: {
             mainGame->stMessage = QString::fromWCharArray(dataManager.GetDesc(data));
             mainGame->wMessage = true;
-
-            //			mainGame->actionSignal.Reset();
-            //			mainGame->actionSignal.Wait();
+            mainGame->actionSignal.reset();
+            mainGame->actionSignal.wait();
             break;
         }
         case HINT_SELECTMSG: {
