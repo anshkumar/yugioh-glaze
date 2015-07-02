@@ -143,6 +143,15 @@ QVariant ClientCardModel::data(const QModelIndex &index, int role) const {
     case CmdFlagRole:
         return clientCard->cmdFlag;
         break;
+    case EquipTargetController:
+        return clientCard->equipTarget->controler;
+        break;
+    case EquipTargetLocation:
+        return clientCard->equipTarget->location;
+        break;
+    case EquipTargetSequence:
+        return clientCard->equipTarget->sequence;
+        break;
     default:
         break;
     }
@@ -189,6 +198,9 @@ QHash<int, QByteArray> ClientCardModel::roleNames() const{
     roles[PositionRole] = "position";
     roles[IsDisabledRole] = "isDisabled";
     roles[CmdFlagRole] = "cmdFlag";
+    roles[EquipTargetController] = "equipTargetController";
+    roles[EquipTargetLocation] = "equipTargetLocation";
+    roles[EquipTargetSequence] = "equipTargetSequence";
     return roles;
 }
 

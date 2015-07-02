@@ -126,6 +126,7 @@ public:
     SingleMode *sMode;
     QThread *workerThread;
     SignalWaiter actionSignal;
+    SignalWaiter singleSignal;
 
     bool win;
     int showcard;

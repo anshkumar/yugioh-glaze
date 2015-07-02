@@ -208,10 +208,7 @@ int DuelClient::ClientAnalyze(char * msg, unsigned int len)
     case MSG_UPDATE_DATA: {
         int player = mainGame->LocalPlayer(BufferIO::ReadInt8(pbuf));
         int location = BufferIO::ReadInt8(pbuf);
-
-        //TODO: update
 //        mainGame->dField.UpdateFieldCard(player, location, pbuf);
-
         return true;
     }
 
@@ -219,10 +216,7 @@ int DuelClient::ClientAnalyze(char * msg, unsigned int len)
         int player = mainGame->LocalPlayer(BufferIO::ReadInt8(pbuf));
         int loc = BufferIO::ReadInt8(pbuf);
         int seq = BufferIO::ReadInt8(pbuf);
-
-        //TODO: update
 //        mainGame->dField.UpdateCard(player, loc, seq, pbuf);
-
         break;
     }
 
@@ -286,8 +280,10 @@ int DuelClient::ClientAnalyze(char * msg, unsigned int len)
             loc = BufferIO::ReadInt8(pbuf);
             seq = BufferIO::ReadInt8(pbuf);
             pcard = mainGame->dField.GetCard(con, loc, seq);
-            mainGame->dField.summonable_cards.push_back(pcard);
-            pcard->cmdFlag |= COMMAND_SUMMON;
+            if(pcard) {
+                mainGame->dField.summonable_cards.push_back(pcard);
+                pcard->cmdFlag |= COMMAND_SUMMON;
+            }
         }
         mainGame->dField.spsummonable_cards.clear();
         count = BufferIO::ReadInt8(pbuf);
@@ -297,20 +293,22 @@ int DuelClient::ClientAnalyze(char * msg, unsigned int len)
             loc = BufferIO::ReadInt8(pbuf);
             seq = BufferIO::ReadInt8(pbuf);
             pcard = mainGame->dField.GetCard(con, loc, seq);
-            mainGame->dField.spsummonable_cards.push_back(pcard);
-            pcard->cmdFlag |= COMMAND_SPSUMMON;
-            if (pcard->location == LOCATION_DECK) {
-                pcard->SetCode(code);
-                mainGame->dField.deck_act = true;
+            if(pcard) {
+                mainGame->dField.spsummonable_cards.push_back(pcard);
+                pcard->cmdFlag |= COMMAND_SPSUMMON;
+                if (pcard->location == LOCATION_DECK) {
+                    pcard->SetCode(code);
+                    mainGame->dField.deck_act = true;
+                }
+                if (pcard->location == LOCATION_GRAVE)
+                    mainGame->dField.grave_act = true;
+                if (pcard->location == LOCATION_REMOVED)
+                    mainGame->dField.remove_act = true;
+                if (pcard->location == LOCATION_EXTRA)
+                    mainGame->dField.extra_act = true;
+                if (pcard->location == LOCATION_SZONE && pcard->sequence == 6)
+                    mainGame->dField.pzone_act = true;
             }
-            if (pcard->location == LOCATION_GRAVE)
-                mainGame->dField.grave_act = true;
-            if (pcard->location == LOCATION_REMOVED)
-                mainGame->dField.remove_act = true;
-            if (pcard->location == LOCATION_EXTRA)
-                mainGame->dField.extra_act = true;
-            if (pcard->location == LOCATION_SZONE && pcard->sequence == 6)
-                mainGame->dField.pzone_act = true;
         }
         mainGame->dField.reposable_cards.clear();
         count = BufferIO::ReadInt8(pbuf);
@@ -320,8 +318,10 @@ int DuelClient::ClientAnalyze(char * msg, unsigned int len)
             loc = BufferIO::ReadInt8(pbuf);
             seq = BufferIO::ReadInt8(pbuf);
             pcard = mainGame->dField.GetCard(con, loc, seq);
-            mainGame->dField.reposable_cards.push_back(pcard);
-            pcard->cmdFlag |= COMMAND_REPOS;
+            if(pcard) {
+                mainGame->dField.reposable_cards.push_back(pcard);
+                pcard->cmdFlag |= COMMAND_REPOS;
+            }
         }
         mainGame->dField.msetable_cards.clear();
         count = BufferIO::ReadInt8(pbuf);
@@ -331,8 +331,10 @@ int DuelClient::ClientAnalyze(char * msg, unsigned int len)
             loc = BufferIO::ReadInt8(pbuf);
             seq = BufferIO::ReadInt8(pbuf);
             pcard = mainGame->dField.GetCard(con, loc, seq);
-            mainGame->dField.msetable_cards.push_back(pcard);
-            pcard->cmdFlag |= COMMAND_MSET;
+            if(pcard) {
+                mainGame->dField.msetable_cards.push_back(pcard);
+                pcard->cmdFlag |= COMMAND_MSET;
+            }
         }
         mainGame->dField.ssetable_cards.clear();
         count = BufferIO::ReadInt8(pbuf);
@@ -342,8 +344,10 @@ int DuelClient::ClientAnalyze(char * msg, unsigned int len)
             loc = BufferIO::ReadInt8(pbuf);
             seq = BufferIO::ReadInt8(pbuf);
             pcard = mainGame->dField.GetCard(con, loc, seq);
-            mainGame->dField.ssetable_cards.push_back(pcard);
-            pcard->cmdFlag |= COMMAND_SSET;
+            if(pcard) {
+                mainGame->dField.ssetable_cards.push_back(pcard);
+                pcard->cmdFlag |= COMMAND_SSET;
+            }
         }
         mainGame->dField.activatable_cards.clear();
         mainGame->dField.activatable_descs.clear();
@@ -355,13 +359,15 @@ int DuelClient::ClientAnalyze(char * msg, unsigned int len)
             seq = BufferIO::ReadInt8(pbuf);
             desc = BufferIO::ReadInt32(pbuf);
             pcard = mainGame->dField.GetCard(con, loc, seq);
-            mainGame->dField.activatable_cards.push_back(pcard);
-            mainGame->dField.activatable_descs.push_back(desc);
-            pcard->cmdFlag |= COMMAND_ACTIVATE;
-            if (pcard->location == LOCATION_GRAVE)
-                mainGame->dField.grave_act = true;
-            if (pcard->location == LOCATION_REMOVED)
-                mainGame->dField.remove_act = true;
+            if(pcard) {
+                mainGame->dField.activatable_cards.push_back(pcard);
+                mainGame->dField.activatable_descs.push_back(desc);
+                pcard->cmdFlag |= COMMAND_ACTIVATE;
+                if (pcard->location == LOCATION_GRAVE)
+                    mainGame->dField.grave_act = true;
+                if (pcard->location == LOCATION_REMOVED)
+                    mainGame->dField.remove_act = true;
+            }
         }
         if(BufferIO::ReadInt8(pbuf)) {
             mainGame->btnBP = true;

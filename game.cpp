@@ -45,6 +45,7 @@ void Game::stopSinglePlay(bool is_exiting) {
     sMode->is_closing = is_exiting;
     sMode->is_continuing = false;
     actionSignal.set();
+    singleSignal.set();
     qDebug()<<"SingleMode stopSinglePlay called";
 }
 

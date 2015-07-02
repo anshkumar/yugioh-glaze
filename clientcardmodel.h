@@ -41,7 +41,10 @@ public:
         LocationRole,
         PositionRole,
         IsDisabledRole,
-        CmdFlagRole
+        CmdFlagRole,
+        EquipTargetController,
+        EquipTargetLocation,
+        EquipTargetSequence
     };
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
