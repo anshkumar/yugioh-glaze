@@ -14,7 +14,7 @@ long SingleMode::pduel = 0;
 bool SingleMode::is_closing = false;
 bool SingleMode::is_continuing = false;
 wchar_t SingleMode::event_string[256];
-int SingleMode::enable_log = 0;
+int SingleMode::enable_log = 2;
 QString SingleMode::name = "";
 
 SingleMode::SingleMode()
@@ -40,6 +40,7 @@ void SingleMode::singlePlayStart()
     time_t seed = time(0);
     rnd.reset(seed);
     set_card_reader((card_reader)DataManager::CardReader);
+    set_message_handler((message_handler)MessageHandler);
     pduel = create_duel(rnd.rand());    
     set_player_info(pduel, 0, 8000, 5, 1);
     set_player_info(pduel, 1, 8000, 5, 1);
@@ -48,6 +49,7 @@ void SingleMode::singlePlayStart()
     mainGame->dInfo.lp[1] = 8000;
 //    myswprintf(mainGame->dInfo.strLP[0], L"%d", mainGame->dInfo.lp[0]);
 //    myswprintf(mainGame->dInfo.strLP[1], L"%d", mainGame->dInfo.lp[1]);
+//    BufferIO::CopyWStr(mainGame->ebNickName->getText(), mainGame->dInfo.hostname, 20);
     mainGame->dInfo.clientname[0] = 0;
     mainGame->dInfo.turn = 0;
     mainGame->dInfo.strTurn[0] = 0;
@@ -102,9 +104,10 @@ bool SingleMode::SinglePlayAnalyze(char* msg, unsigned int len)
             return false;
         offset = pbuf;
         mainGame->dInfo.curMsg = BufferIO::ReadUInt8(pbuf);
+        qDebug()<<"CURRENT DUEL MESSAGE IS "<<mainGame->dInfo.curMsg;
         switch (mainGame->dInfo.curMsg) {
         case MSG_RETRY: {
-            qDebug()<<"current duel message is "<<mainGame->dInfo.curMsg<<" MSG_RETRY";
+            qDebug()<<"MSG_RETRY entered";
             mainGame->wMessage = true;
             mainGame->stMessage = "Error occured.";
             emit mainGame->qwMessageChanged();
@@ -786,7 +789,8 @@ void SingleMode::SinglePlayReload()
     Buffer queryBuffer;
     unsigned int flag = 0x7fdfff;
     query_field_card(pduel, 0, LOCATION_MZONE, flag, queryBuffer.buffer, 0);
-    qDebug()<<"SinglePlayReload enter";
+    qDebug()<<"SinglePlayReload enter ";
+    qDebug()<<queryBuffer.buffer[0];
     QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
                               Q_ARG(int, mainGame->LocalPlayer(0)),
                               Q_ARG(int, LOCATION_MZONE),
@@ -860,8 +864,21 @@ void SingleMode::SinglePlayReload()
 }
 
 int SingleMode::MessageHandler(long fduel, int type) {
-    Q_UNUSED(fduel);
-    Q_UNUSED(type);
+    if(!enable_log)
+        return 0;
+    char msgbuf[1024];
+    get_log_message(fduel, (byte*)msgbuf);
+    if(enable_log == 1) {
+        wchar_t wbuf[1024];
+        BufferIO::DecodeUTF8(msgbuf, wbuf);
+        mainGame->AddChatMsg(wbuf, 9);
+    } else if(enable_log == 2) {
+        FILE* fp = fopen("error.log", "at");
+        if(!fp)
+            return 0;
+        fprintf(fp, "[Script error:] %s\n", msgbuf);
+        fclose(fp);
+    }
     return 0;
 }
 

@@ -56,14 +56,16 @@ public:
     ClientCard* &operator[](int i);
     ~ClientCardModel();
 
-    Q_INVOKABLE void dataChangedSignal();
-    Q_INVOKABLE void dataChangedSignal(int sequence);
-    Q_INVOKABLE void push_back(ClientCard* card);
-    Q_INVOKABLE void clear();
     QList<glaze::ClientCard*>::iterator erase(const myIter);
     QList<glaze::ClientCard*>::iterator erase(const myIter begin, const myIter end);
     void swap(ClientCardModel&);
     void copy(const ClientCardModel &model);
+
+public slots:
+    void dataChangedSignal();
+    void dataChangedSignal(int sequence);
+    void push_back(ClientCard* card);
+    void clear();
 
 protected:
     QHash<int, QByteArray> roleNames() const;

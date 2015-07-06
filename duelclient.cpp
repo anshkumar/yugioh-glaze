@@ -4,6 +4,7 @@
 #include "field.h"
 #include "duel.h"
 #include "game.h"
+#include <QDebug>
 
 namespace glaze {
 
@@ -37,8 +38,9 @@ DuelClient::DuelClient(QObject *parent) : QObject(parent)
 
 int DuelClient::ClientAnalyze(char * msg, unsigned int len)
 {
-    Q_UNUSED(len);
     char* pbuf = msg;
+    Buffer queryBuffer;
+    strncpy((char*)queryBuffer.buffer, pbuf, len);
     wchar_t textBuffer[256];
     mainGame->dInfo.curMsg = BufferIO::ReadUInt8(pbuf);
     mainGame->wCmdMenu = false;
@@ -130,7 +132,7 @@ int DuelClient::ClientAnalyze(char * msg, unsigned int len)
         break;
     }
 
-    case MSG_WIN: { //done  //future update required
+    case MSG_WIN: {
             int player = BufferIO::ReadInt8(pbuf);
             int type = BufferIO::ReadInt8(pbuf);
             mainGame->showcarddif = 110;
@@ -208,7 +210,10 @@ int DuelClient::ClientAnalyze(char * msg, unsigned int len)
     case MSG_UPDATE_DATA: {
         int player = mainGame->LocalPlayer(BufferIO::ReadInt8(pbuf));
         int location = BufferIO::ReadInt8(pbuf);
-//        mainGame->dField.UpdateFieldCard(player, location, pbuf);
+        QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
+                                  Q_ARG(int, player),
+                                  Q_ARG(int, location),
+                                  Q_ARG(Buffer, queryBuffer));
         return true;
     }
 
@@ -216,7 +221,11 @@ int DuelClient::ClientAnalyze(char * msg, unsigned int len)
         int player = mainGame->LocalPlayer(BufferIO::ReadInt8(pbuf));
         int loc = BufferIO::ReadInt8(pbuf);
         int seq = BufferIO::ReadInt8(pbuf);
-//        mainGame->dField.UpdateCard(player, loc, seq, pbuf);
+        QMetaObject::invokeMethod(&mainGame->dField,"UpdateCard",Qt::QueuedConnection,
+                                  Q_ARG(int, player),
+                                  Q_ARG(int, loc),
+                                  Q_ARG(int, seq),
+                                  Q_ARG(Buffer, queryBuffer));
         break;
     }
 
@@ -272,6 +281,7 @@ int DuelClient::ClientAnalyze(char * msg, unsigned int len)
         /*int selecting_player = */BufferIO::ReadInt8(pbuf);
         int code, desc, count, con, loc, seq;
         ClientCard* pcard;
+        qDebug()<<"MSG_SELECT_IDLECMD analysis entered";
         mainGame->dField.summonable_cards.clear();
         count = BufferIO::ReadInt8(pbuf);
         for (int i = 0; i < count; ++i) {

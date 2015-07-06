@@ -31,6 +31,7 @@ void Game::startSinglePlay(QString name) {
     sMode = new SingleMode;
     workerThread = new QThread;
     sMode->name = name;
+    singleSignal.setNoWait(false);
     qDebug()<<"SingleMode object craeted at "<<sMode;
     sMode->moveToThread(workerThread);
     connect(workerThread, SIGNAL(started()), sMode, SLOT(singlePlayStart()));
@@ -42,6 +43,7 @@ void Game::startSinglePlay(QString name) {
 }
 
 void Game::stopSinglePlay(bool is_exiting) {
+    singleSignal.setNoWait(true);
     sMode->is_closing = is_exiting;
     sMode->is_continuing = false;
     actionSignal.set();

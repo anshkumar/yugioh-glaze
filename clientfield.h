@@ -125,8 +125,6 @@ public:
     ClientCard* GetCard(int controler, int location, int sequence, int sub_seq = 0);
     void AddCard(ClientCard* pcard, int controler, int location, int sequence);
     ClientCard* RemoveCard(int controler, int location, int sequence);
-    Q_INVOKABLE void UpdateCard(int controler, int location, int sequence, Buffer buf);
-    Q_INVOKABLE void UpdateFieldCard(int controler, int location, Buffer buf);
 
     void ClearCommandFlag();
     void ClearSelect();
@@ -178,6 +176,10 @@ public:
     QVector3D vsfield1;
     QVector3D vsLScale1;
     QVector3D vsRScale1;
+
+public slots:
+    void UpdateCard(int controler, int location, int sequence, Buffer buf);
+    void UpdateFieldCard(int controler, int location, Buffer buf);
 
 //    virtual bool OnEvent(const irr::SEvent& event);
 //	void GetHoverField(int x, int y);
