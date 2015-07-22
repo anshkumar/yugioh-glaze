@@ -1,6 +1,6 @@
 TEMPLATE = app
 
-CONFIG += c++11 debug
+CONFIG += c++11 release
 
 QT += qml quick widgets core
 
@@ -59,12 +59,12 @@ else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/re
 else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/debug/ocgcore.lib
 else:unix: PRE_TARGETDEPS += $$PWD/libocgcore.a
 
-unix|win32: LIBS += -lsqlite3
+unix: LIBS += -lsqlite3
 
-unix|win32: LIBS += -llua
+unix: LIBS += -llua
 
 #needed in Ubuntu 14.04
-unix|win32: LIBS += -ldl
+unix: LIBS += -ldl
 
 win32:CONFIG(release, debug|release): LIBS += -L$$PWD/sqlite3/ -lsqlite3
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/sqlite3/ -lsqlite3d

@@ -547,7 +547,10 @@ Item {
                         front: Image {
                             width: cardWidth; height: cardHeight;
                             anchors.centerIn: parent
-                            source : (index === 6 && code != 0)?"file:pics/"+ code +".jpg":""
+                            source : {
+                                if(index == 6 && code != 0)
+                                    return "file:pics/"+ code +".jpg";
+                            }
                         }
                     }
 
@@ -594,7 +597,10 @@ Item {
                         front: Image {
                             width: cardWidth; height: cardHeight;
                             anchors.centerIn: parent
-                            source : (index === 5 && code != 0)?"file:pics/"+ code +".jpg":""
+                            source : {
+                                if(index === 5 && code != 0)
+                                    return "file:pics/"+ code +".jpg";
+                            }
                         }
                     }
                 }
@@ -629,7 +635,7 @@ Item {
                     anchors.centerIn: parent
                     front: Image {
                         width: cardWidth; height: cardHeight;
-                        source: (code != 0)?"file:pics/"+ code +".jpg":""
+                        source: /*(code != 0)?*/"file:pics/"+ code +".jpg"/*:""*/
                         anchors.centerIn: parent
                     }
                     flipped: (position & pos_facedown)? true: false;
@@ -680,7 +686,10 @@ Item {
                         front: Image {
                             width: cardWidth; height: cardHeight;
                             anchors.centerIn: parent
-                            source : (index === 7 && code != 0)?"file:pics/"+ code +".jpg":""
+                            source : {
+                                if(index === 7 && code != 0)
+                                    return "file:pics/"+ code +".jpg";
+                            }
                         }
                     }
 
@@ -715,7 +724,7 @@ Item {
                     anchors.centerIn: parent
                     front: Image {
                         width: cardWidth; height: cardHeight;
-                        source: (code != 0)?"file:pics/"+ code +".jpg":""
+                        source: /*(code != 0)?*/"file:pics/"+ code +".jpg"/*:""*/
                         anchors.centerIn: parent
                     }
                     rotation: (position & pos_defence)? 90: 0;
@@ -847,7 +856,10 @@ Item {
                         front: Image {
                             width: cardWidth; height: cardHeight;
                             anchors.centerIn: parent
-                            source : (index === 7 && code != 0)?"file:pics/"+ code +".jpg":""
+                            source : {
+                                if(index === 7 && code != 0)
+                                    return "file:pics/"+ code +".jpg";
+                            }
                         }
                         rotation: 180
                     }
@@ -912,7 +924,7 @@ Item {
                     anchors.centerIn: parent
                     front: Image {
                         width: cardWidth; height: cardHeight;
-                        source: (code != 0)?"file:pics/"+ code +".jpg":""
+                        source: /*(code != 0)?*/"file:pics/"+ code +".jpg"/*:""*/
                         anchors.centerIn: parent
                     }
                     flipped: (position & pos_facedown)? true: false;
@@ -964,7 +976,10 @@ Item {
                         front: Image {
                             width: cardWidth; height: cardHeight;
                             anchors.centerIn: parent
-                            source : (index === 6 && code != 0)?"file:pics/"+ code +".jpg":""
+                            source : {
+                                if(index === 6 && code != 0)
+                                    return "file:pics/"+ code +".jpg";
+                            }
                         }
                         rotation: 180
                     }
@@ -1000,7 +1015,7 @@ Item {
                     anchors.centerIn: parent
                     front: Image {
                         width: cardWidth; height: cardHeight;
-                        source: (code != 0)?"file:pics/"+ code +".jpg":""
+                        source: /*(code != 0)?*/"file:pics/"+ code +".jpg"/*:""*/
                         anchors.centerIn: parent
                     }
                     rotation: (position & pos_defence)? 90: 180;
@@ -1058,7 +1073,10 @@ Item {
                         front: Image {
                             width: cardWidth; height: cardHeight;
                             anchors.centerIn: parent
-                            source : (index === 5 && code != 0)?"file:pics/"+ code +".jpg":""
+                            source : {
+                                if(index === 5 && code != 0)
+                                    return "file:pics/"+ code +".jpg";
+                            }
                         }
                         rotation: 180
                     }
@@ -1122,7 +1140,7 @@ Item {
                 front: Image {
                     id: clientCardImg1
                     width: cardWidth; height: cardHeight;
-                    source: (code != 0)?"file:pics/"+ code +".jpg":parent.flipped=true; //Will issue warning
+                    source: /*(code != 0)?*/"file:pics/"+ code +".jpg"/*:parent.flipped=true*/; //Will issue warning
                     anchors.centerIn: parent
                 }
             }
@@ -1156,7 +1174,7 @@ Item {
                 front: Image {
                     id: clientCardImg2
                     width: cardWidth; height: cardHeight;
-                    source: (code != 0)?"file:pics/"+ code +".jpg":parent.flipped=true; //Will issue warning
+                    source: /*(code != 0)?*/"file:pics/"+ code +".jpg"/*:parent.flipped=true*/; //Will issue warning
                     anchors.centerIn: parent
                 }
             }

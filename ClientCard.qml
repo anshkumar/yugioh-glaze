@@ -151,7 +151,6 @@ Flipable {
         if(code != 0) {
             desCardImg.source = "file:pics/"+ code +".jpg";
             cardName.text = name;
-            console.log("showInfo entered");
             cardType.text = formatType;
             desText.text = showingText;            
             if(baseType & type_monster) {
