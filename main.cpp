@@ -12,8 +12,9 @@ int main(int argc, char *argv[])
     QQuickView view;
     qDebug()<<"From main thread: "<<QThread::currentThreadId();
     qRegisterMetaType<glaze::ClientCard*>("ClientCard*");
+	qRegisterMetaType<glaze::ClientCard**>("ClientCard**");
     qRegisterMetaType<glaze::ClientCardModel*>("ClientCardModel*");
-    qRegisterMetaType<glaze::Buffer>("Buffer");
+//    qRegisterMetaType<glaze::Buffer>("Buffer");
     glaze::Game _game;
     glaze::mainGame = &_game;
     if(!glaze::mainGame->Initialize())
@@ -26,7 +27,7 @@ int main(int argc, char *argv[])
 
     view.setSource(QUrl("qrc:/main.qml"));
     view.show();
-//    view.showFullScreen();
+    //view.showFullScreen();
     QObject::connect(view.engine(), SIGNAL(quit()), QGuiApplication::instance(), SLOT(quit()));
     return app.exec();
 }

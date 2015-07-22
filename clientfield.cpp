@@ -1,10 +1,12 @@
 #include <QDebug>
+#include <QEventLoop>
 #include "clientcardmodel.h"
 #include "clientfield.h"
 #include "clientcard.h"
 #include "bufferio.h"
 #include "field.h"
 #include "game.h"
+#include "ocgapi.h"
 
 namespace glaze {
 
@@ -65,8 +67,7 @@ bool ClientField::qwShowChainCard()
 ////    return QQmlListProperty<ClientCard>(this, Overlay_cards); //TODO: overlay_card return func.
 //}
 
-ClientField::ClientField(QObject *parent)
-    : QObject(parent)
+ClientField::ClientField()
 {
     hovered_card = 0;
     clicked_card = 0;
@@ -79,9 +80,20 @@ ClientField::ClientField(QObject *parent)
     deck_reversed = false;
     for(int p = 0; p < 2; ++p) {
         for(int i = 0; i < 5; ++i)
-            QMetaObject::invokeMethod(&mzone[p],"push_back",Qt::QueuedConnection,Q_ARG(ClientCard*, 0));
+            mzone[p].push_back(0);
+//            QMetaObject::invokeMethod(&mzone[p],"push_back",Qt::QueuedConnection,Q_ARG(ClientCard*, 0));
         for(int i = 0; i < 8; ++i)
-            QMetaObject::invokeMethod(&szone[p],"push_back",Qt::QueuedConnection,Q_ARG(ClientCard*, 0));
+            szone[p].push_back(0);
+//            QMetaObject::invokeMethod(&szone[p],"push_back",Qt::QueuedConnection,Q_ARG(ClientCard*, 0));
+    }
+}
+
+ClientField::~ClientField() {
+    for(int p = 0; p < 2; ++p) {
+        for(int i = 0; i < 5; ++i)
+            mzone[p].clear();
+        for(int i = 0; i < 8; ++i)
+            szone[p].clear();
     }
 }
 
@@ -90,10 +102,12 @@ void ClientField::Clear()
     for(int i = 0; i < 2; ++i) {
         for(auto cit = deck[i].begin(); cit != deck[i].end(); ++cit)
             delete *cit;
-        QMetaObject::invokeMethod(&deck[i], "clear",Qt::QueuedConnection);
+        deck[i].clear();
+//        QMetaObject::invokeMethod(&deck[i], "clear",Qt::QueuedConnection);
         for(auto cit = hand[i].begin(); cit != hand[i].end(); ++cit)
             delete *cit;
-        QMetaObject::invokeMethod(&hand[i], "clear",Qt::QueuedConnection);
+        hand[i].clear();
+//        QMetaObject::invokeMethod(&hand[i], "clear",Qt::QueuedConnection);
         for(auto cit = mzone[i].begin(); cit != mzone[i].end(); ++cit) {
             if(*cit)
                 delete *cit;
@@ -106,13 +120,16 @@ void ClientField::Clear()
         }
         for(auto cit = grave[i].begin(); cit != grave[i].end(); ++cit)
             delete *cit;
-        QMetaObject::invokeMethod(&grave[i], "clear",Qt::QueuedConnection);
+        grave[i].clear();
+//        QMetaObject::invokeMethod(&grave[i], "clear",Qt::QueuedConnection);
         for(auto cit = remove[i].begin(); cit != remove[i].end(); ++cit)
             delete *cit;
-        QMetaObject::invokeMethod(&remove[i], "clear",Qt::QueuedConnection);
+        remove[i].clear();
+//        QMetaObject::invokeMethod(&remove[i], "clear",Qt::QueuedConnection);
         for(auto cit = extra[i].begin(); cit != extra[i].end(); ++cit)
             delete *cit;
-        QMetaObject::invokeMethod(&extra[i], "clear",Qt::QueuedConnection);
+        extra[i].clear();
+//        QMetaObject::invokeMethod(&extra[i], "clear",Qt::QueuedConnection);
     }
     for(auto sit = overlay_cards.begin(); sit != overlay_cards.end(); ++sit)
         delete *sit;
@@ -125,6 +142,7 @@ void ClientField::Clear()
     extra_act = false;
     pzone_act = false;
     deck_reversed = false;
+    emit clearFinished();
 }
 
 void ClientField::Initial(int player, int deckc, int extrac)
@@ -196,18 +214,29 @@ ClientCard* ClientField::GetCard(int controler, int location, int sequence, int 
     }
 }
 
-void ClientField::AddCard(ClientCard* pcard, int controler, int location, int sequence)
+ClientCard *ClientField::AddCard(int controler, int location, int sequence, ClientCard* pcard, ClientCard** newcard)
 {
+    if(!pcard)
+        pcard = new ClientCard;
+	if(newcard)
+		*newcard = pcard;
     pcard->controler = controler;
     pcard->location = location;
     pcard->sequence = sequence;
+//    QEventLoop loop;
+
     switch(location) {
     case LOCATION_DECK: {
+//        connect(&deck[controler], SIGNAL(pushBackFinished()), &loop, SLOT(quit()));
         if (sequence != 0 || deck[controler].size() == 0) {
-            QMetaObject::invokeMethod(&deck[controler],"push_back", Qt::QueuedConnection, Q_ARG(ClientCard*, pcard));
+            deck[controler].push_back(pcard);
+//            QMetaObject::invokeMethod(&deck[controler],"push_back", Qt::QueuedConnection, Q_ARG(ClientCard*, pcard));
+//            loop.exec();
             pcard->sequence = deck[controler].size() - 1;
         } else {
-            QMetaObject::invokeMethod(&deck[controler],"push_back", Qt::QueuedConnection, Q_ARG(ClientCard*, 0));
+            deck[controler].push_back(0);
+//            QMetaObject::invokeMethod(&deck[controler],"push_back", Qt::QueuedConnection, Q_ARG(ClientCard*, 0));
+//            loop.exec();
             for(int i = deck[controler].size() - 1; i > 0; --i) {
                 deck[controler][i] = deck[controler][i - 1];
                 deck[controler][i]->sequence++;
@@ -219,7 +248,10 @@ void ClientField::AddCard(ClientCard* pcard, int controler, int location, int se
         break;
     }
     case LOCATION_HAND: {
-        QMetaObject::invokeMethod(&hand[controler],"push_back", Qt::QueuedConnection, Q_ARG(ClientCard*, pcard));
+        hand[controler].push_back(pcard);
+//        connect(&hand[controler], SIGNAL(pushBackFinished()), &loop, SLOT(quit()));
+//        QMetaObject::invokeMethod(&hand[controler],"push_back", Qt::QueuedConnection, Q_ARG(ClientCard*, pcard));
+//        loop.exec();
         pcard->sequence = hand[controler].size() - 1;
         break;
     }
@@ -232,21 +264,32 @@ void ClientField::AddCard(ClientCard* pcard, int controler, int location, int se
         break;
     }
     case LOCATION_GRAVE: {
-        QMetaObject::invokeMethod(&grave[controler],"push_back", Qt::QueuedConnection, Q_ARG(ClientCard*, pcard));
+        grave[controler].push_back(pcard);
+//        connect(&grave[controler], SIGNAL(pushBackFinished()), &loop, SLOT(quit()));
+//        QMetaObject::invokeMethod(&grave[controler],"push_back", Qt::QueuedConnection, Q_ARG(ClientCard*, pcard));
+//        loop.exec();
         pcard->sequence = grave[controler].size() - 1;
         break;
     }
     case LOCATION_REMOVED: {
-        QMetaObject::invokeMethod(&remove[controler],"push_back", Qt::QueuedConnection, Q_ARG(ClientCard*, pcard));
+        remove[controler].push_back(pcard);
+//        connect(&remove[controler], SIGNAL(pushBackFinished()), &loop, SLOT(quit()));
+//        QMetaObject::invokeMethod(&remove[controler],"push_back", Qt::QueuedConnection, Q_ARG(ClientCard*, pcard));
+//        loop.exec();
         pcard->sequence = remove[controler].size() - 1;
         break;
     }
     case LOCATION_EXTRA: {
-        QMetaObject::invokeMethod(&extra[controler],"push_back", Qt::QueuedConnection, Q_ARG(ClientCard*, pcard));
+        extra[controler].push_back(pcard);
+//        connect(&extra[controler], SIGNAL(pushBackFinished()), &loop, SLOT(quit()));
+//        QMetaObject::invokeMethod(&extra[controler],"push_back", Qt::QueuedConnection, Q_ARG(ClientCard*, pcard));
+//        loop.exec();
         pcard->sequence = extra[controler].size() - 1;
         break;
     }
     }
+    emit addCardFinished();
+    return pcard;
 }
 
 ClientCard* ClientField::RemoveCard(int controler, int location, int sequence)
@@ -317,9 +360,10 @@ ClientCard* ClientField::RemoveCard(int controler, int location, int sequence)
     return pcard;
 }
 
-void ClientField::UpdateCard(int controler, int location, int sequence, Buffer buf)
+void ClientField::UpdateCard(int controler, int location, int sequence, char *buf)
 {
-    char *data = (char*)buf.buffer;
+//    char *data = (char*)buf.buffer;
+    char *data = buf;
     ClientCard* pcard = GetCard(controler, location, sequence);
     ClientCardModel* lst = 0;
     switch(location)
@@ -350,12 +394,14 @@ void ClientField::UpdateCard(int controler, int location, int sequence, Buffer b
         return;
     if(pcard)
         pcard->UpdateInfo(data + 4);
-    emit lst->dataChangedSignal(sequence);
+    lst->dataChangedSignal(sequence);
+    emit updateCardFinished();
 }
 
-void ClientField::UpdateFieldCard(int controler, int location, Buffer buf)
+void ClientField::UpdateFieldCard(int controler, int location, char *buf)
 {
-    char *data = (char*)buf.buffer;
+//    char *data = (char*)buf.buffer;
+    char *data = buf;
     ClientCardModel* lst = 0;
     QList<ClientCard*>::iterator cit;
     switch(location)
@@ -392,7 +438,8 @@ void ClientField::UpdateFieldCard(int controler, int location, Buffer buf)
         }
         data += len - 4;
     }
-    emit lst->dataChangedSignal();
+    lst->dataChangedSignal();
+    emit updateFieldCardFinished();
 }
 
 void ClientField::ClearCommandFlag() {
@@ -1119,6 +1166,86 @@ bool ClientField::check_sum(QSet<ClientCard*>& testlist, QSet<ClientCard*>::iter
     return (acc > l1 && check_sum(testlist, index, acc - l1, count + 1))
            || (l2 > 0 && acc > l2 && check_sum(testlist, index, acc - l2, count + 1))
            || check_sum(testlist, index, acc, count);
+}
+
+void ClientField::SinglePlayRefresh(int flag) {
+    unsigned char queryBuffer[0x1000];
+    /*int len = */query_field_card(pduel, 0, LOCATION_MZONE, flag, queryBuffer, 0);
+    mainGame->dField.UpdateFieldCard(mainGame->LocalPlayer(0), LOCATION_MZONE, (char*)queryBuffer);
+    /*len = */query_field_card(pduel, 1, LOCATION_MZONE, flag, queryBuffer, 0);
+    mainGame->dField.UpdateFieldCard(mainGame->LocalPlayer(1), LOCATION_MZONE, (char*)queryBuffer);
+    /*len = */query_field_card(pduel, 0, LOCATION_SZONE, flag, queryBuffer, 0);
+    mainGame->dField.UpdateFieldCard(mainGame->LocalPlayer(0), LOCATION_SZONE, (char*)queryBuffer);
+    /*len = */query_field_card(pduel, 1, LOCATION_SZONE, flag, queryBuffer, 0);
+    mainGame->dField.UpdateFieldCard(mainGame->LocalPlayer(1), LOCATION_SZONE, (char*)queryBuffer);
+    /*len = */query_field_card(pduel, 0, LOCATION_HAND, flag, queryBuffer, 0);
+    mainGame->dField.UpdateFieldCard(mainGame->LocalPlayer(0), LOCATION_HAND, (char*)queryBuffer);
+    /*len = */query_field_card(pduel, 1, LOCATION_HAND, flag, queryBuffer, 0);
+    mainGame->dField.UpdateFieldCard(mainGame->LocalPlayer(1), LOCATION_HAND, (char*)queryBuffer);
+    emit singlePlayRefreshFinished();
+}
+void ClientField::SinglePlayRefreshHand(int player, int flag) {
+    unsigned char queryBuffer[0x1000];
+    /*int len = */query_field_card(pduel, player, LOCATION_HAND, flag, queryBuffer, 0);
+    mainGame->dField.UpdateFieldCard(mainGame->LocalPlayer(player), LOCATION_HAND, (char*)queryBuffer);
+    emit singlePlayRefreshHandFinished();
+}
+void ClientField::SinglePlayRefreshGrave(int player, int flag) {
+    unsigned char queryBuffer[0x1000];
+    /*int len = */query_field_card(pduel, player, LOCATION_GRAVE, flag, queryBuffer, 0);
+    mainGame->dField.UpdateFieldCard(mainGame->LocalPlayer(player), LOCATION_GRAVE, (char*)queryBuffer);
+    emit singlePlayRefreshGraveFinished();
+}
+void ClientField::SinglePlayRefreshDeck(int player, int flag) {
+    unsigned char queryBuffer[0x1000];
+    /*int len = */query_field_card(pduel, player, LOCATION_DECK, flag, queryBuffer, 0);
+    mainGame->dField.UpdateFieldCard(mainGame->LocalPlayer(player), LOCATION_DECK, (char*)queryBuffer);
+    singlePlayRefreshDeckFinished();
+}
+void ClientField::SinglePlayRefreshExtra(int player, int flag) {
+    unsigned char queryBuffer[0x1000];
+    /*int len = */query_field_card(pduel, player, LOCATION_EXTRA, flag, queryBuffer, 0);
+    mainGame->dField.UpdateFieldCard(mainGame->LocalPlayer(player), LOCATION_EXTRA, (char*)queryBuffer);
+    emit singlePlayRefreshExtraFinished();
+}
+void ClientField::SinglePlayRefreshSingle(int player, int location, int sequence, int flag) {
+    unsigned char queryBuffer[0x1000];
+    /*int len = */query_card(pduel, player, location, sequence, flag, queryBuffer, 0);
+    mainGame->dField.UpdateCard(mainGame->LocalPlayer(player), location, sequence, (char*)queryBuffer);
+    singlePlayRefreshSingleFinished();
+}
+void ClientField::SinglePlayReload() {
+    unsigned char queryBuffer[0x1000];
+    unsigned int flag = 0x7fdfff;
+    /*int len = */query_field_card(pduel, 0, LOCATION_MZONE, flag, queryBuffer, 0);
+    mainGame->dField.UpdateFieldCard(mainGame->LocalPlayer(0), LOCATION_MZONE, (char*)queryBuffer);
+    /*len = */query_field_card(pduel, 1, LOCATION_MZONE, flag, queryBuffer, 0);
+    mainGame->dField.UpdateFieldCard(mainGame->LocalPlayer(1), LOCATION_MZONE, (char*)queryBuffer);
+    /*len = */query_field_card(pduel, 0, LOCATION_SZONE, flag, queryBuffer, 0);
+    mainGame->dField.UpdateFieldCard(mainGame->LocalPlayer(0), LOCATION_SZONE, (char*)queryBuffer);
+    /*len = */query_field_card(pduel, 1, LOCATION_SZONE, flag, queryBuffer, 0);
+    mainGame->dField.UpdateFieldCard(mainGame->LocalPlayer(1), LOCATION_SZONE, (char*)queryBuffer);
+    /*len = */query_field_card(pduel, 0, LOCATION_HAND, flag, queryBuffer, 0);
+    mainGame->dField.UpdateFieldCard(mainGame->LocalPlayer(0), LOCATION_HAND, (char*)queryBuffer);
+    /*len = */query_field_card(pduel, 1, LOCATION_HAND, flag, queryBuffer, 0);
+    mainGame->dField.UpdateFieldCard(mainGame->LocalPlayer(1), LOCATION_HAND, (char*)queryBuffer);
+    /*len = */query_field_card(pduel, 0, LOCATION_DECK, flag, queryBuffer, 0);
+    mainGame->dField.UpdateFieldCard(mainGame->LocalPlayer(0), LOCATION_DECK, (char*)queryBuffer);
+    /*len = */query_field_card(pduel, 1, LOCATION_DECK, flag, queryBuffer, 0);
+    mainGame->dField.UpdateFieldCard(mainGame->LocalPlayer(1), LOCATION_DECK, (char*)queryBuffer);
+    /*len = */query_field_card(pduel, 0, LOCATION_EXTRA, flag, queryBuffer, 0);
+    mainGame->dField.UpdateFieldCard(mainGame->LocalPlayer(0), LOCATION_EXTRA, (char*)queryBuffer);
+    /*len = */query_field_card(pduel, 1, LOCATION_EXTRA, flag, queryBuffer, 0);
+    mainGame->dField.UpdateFieldCard(mainGame->LocalPlayer(1), LOCATION_EXTRA, (char*)queryBuffer);
+    /*len = */query_field_card(pduel, 0, LOCATION_GRAVE, flag, queryBuffer, 0);
+    mainGame->dField.UpdateFieldCard(mainGame->LocalPlayer(0), LOCATION_GRAVE, (char*)queryBuffer);
+    /*len = */query_field_card(pduel, 1, LOCATION_GRAVE, flag, queryBuffer, 0);
+    mainGame->dField.UpdateFieldCard(mainGame->LocalPlayer(1), LOCATION_GRAVE, (char*)queryBuffer);
+    /*len = */query_field_card(pduel, 0, LOCATION_REMOVED, flag, queryBuffer, 0);
+    mainGame->dField.UpdateFieldCard(mainGame->LocalPlayer(0), LOCATION_REMOVED, (char*)queryBuffer);
+    /*len = */query_field_card(pduel, 1, LOCATION_REMOVED, flag, queryBuffer, 0);
+    mainGame->dField.UpdateFieldCard(mainGame->LocalPlayer(1), LOCATION_REMOVED, (char*)queryBuffer);
+    emit singlePlayReloadFinished();
 }
 
 }

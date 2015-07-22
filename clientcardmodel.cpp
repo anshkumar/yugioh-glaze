@@ -24,13 +24,13 @@ QVariant ClientCardModel::data(const QModelIndex &index, int role) const {
     const ClientCard *clientCard = m_list[index.row()];
     CardData cd;
     ClientCardModel* lst = 0;
-    wchar_t formatBuffer[256];
     const wchar_t* showingtext;
     if(!clientCard)
         return 0;
     if(!dataManager.GetData(clientCard->code, &cd))
             memset(&cd, 0, sizeof(CardData));
 
+    QString formatBuffer;
     switch(clientCard->location) {
     case LOCATION_DECK:
         lst = &mainGame->dField.deck[clientCard->controler];
@@ -91,14 +91,15 @@ QVariant ClientCardModel::data(const QModelIndex &index, int role) const {
         break;
     case NameRole:
         if(cd.alias != 0 && (cd.alias - clientCard->code < 10 || clientCard->code - cd.alias < 10))
-            myswprintf(formatBuffer, L"%ls", dataManager.GetName(cd.alias));
+             formatBuffer = QString::fromWCharArray(dataManager.GetName(cd.alias));
         else
-            myswprintf(formatBuffer, L"%ls", dataManager.GetName(clientCard->code));
-        return QString::fromWCharArray(formatBuffer);
+            formatBuffer = QString::fromWCharArray(dataManager.GetName(clientCard->code));
+        return formatBuffer;
         break;
     case FormatTypeRole:
-        myswprintf(formatBuffer, L"[%ls]", dataManager.FormatType(cd.type));
-        return QString::fromWCharArray(formatBuffer);
+        formatBuffer = QString::fromWCharArray(dataManager.FormatType(cd.type));
+        formatBuffer = "[" + formatBuffer + "]";
+        return formatBuffer;
         break;
     case TextRole:
         showingtext = dataManager.GetText(clientCard->code);
@@ -226,6 +227,7 @@ void ClientCardModel::push_back(ClientCard *card) {
     beginInsertRows(QModelIndex(), rowCount(), rowCount());
     m_list << card;
     endInsertRows();
+//    emit pushBackFinished();
 }
 
 int ClientCardModel::size() const {
@@ -266,11 +268,6 @@ void ClientCardModel::copy(const ClientCardModel &model) {
     beginResetModel();
     m_list = model.m_list;
     endResetModel();
-}
-
-ClientCardModel::~ClientCardModel()
-{
-
 }
 
 }

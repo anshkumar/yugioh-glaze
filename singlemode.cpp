@@ -1,4 +1,6 @@
 #include <QDebug>
+#include <QEventLoop>
+#include <time.h>
 #include "game.h"
 #include "singlemode.h"
 #include "mtrandom.h"
@@ -19,6 +21,7 @@ QString SingleMode::name = "";
 
 SingleMode::SingleMode()
 {
+
 }
 
 void SingleMode::SetResponse(unsigned char* resp) {
@@ -32,6 +35,8 @@ void SingleMode::singlePlayStart()
     qDebug()<<"SingleMode run called from?: "<<QThread::currentThreadId();
     QString fname("./single/"+name+".lua");
     char fname2[256];
+    QEventLoop loop;
+    connect(&mainGame->dField, SIGNAL(clearFinished()), &loop, SLOT(quit()));
     strcpy(fname2, fname.toStdString().c_str());
     size_t slen = fname.length();
     qDebug()<<"SingleMode game name after conversion is "<<fname<<" and length is "<<slen;
@@ -67,7 +72,9 @@ void SingleMode::singlePlayStart()
     mainGame->dInfo.isSingleMode = true;
     mainGame->dField.hovered_card = 0;
     mainGame->dField.clicked_card = 0;
-    mainGame->dField.Clear();
+//    mainGame->dField.Clear();
+    QMetaObject::invokeMethod(&mainGame->dField,"Clear",Qt::QueuedConnection);
+    loop.exec();
 
     start_duel(pduel, 0);
     char engineBuffer[0x1000];  //size = 4096
@@ -84,7 +91,9 @@ void SingleMode::singlePlayStart()
             is_continuing = SinglePlayAnalyze(engineBuffer, len);   // the commands from above function are processed here
         }
     }
-    mainGame->dField.Clear();
+//    mainGame->dField.Clear();
+    QMetaObject::invokeMethod(&mainGame->dField,"Clear",Qt::QueuedConnection);
+    loop.exec();
     qDebug()<<"SingleMode game ended";
     end_duel(pduel);
     if(is_closing) {
@@ -99,6 +108,17 @@ bool SingleMode::SinglePlayAnalyze(char* msg, unsigned int len)
 {
     char* offset, *pbuf = msg;
     int player, count;
+    QEventLoop loop;
+    connect(&mainGame->dField, SIGNAL(clearFinished()), &loop, SLOT(quit()));
+    connect(&mainGame->dField, SIGNAL(addCardFinished()), &loop, SLOT(quit()));
+    connect(&mainGame->dField, SIGNAL(singlePlayRefreshFinished()), &loop, SLOT(quit()));
+    connect(&mainGame->dField, SIGNAL(singlePlayRefreshHandFinished()), &loop, SLOT(quit()));
+    connect(&mainGame->dField, SIGNAL(singlePlayRefreshGraveFinished()), &loop, SLOT(quit()));
+    connect(&mainGame->dField, SIGNAL(singlePlayRefreshDeckFinished()), &loop, SLOT(quit()));
+    connect(&mainGame->dField, SIGNAL(singlePlayRefreshExtraFinished()), &loop, SLOT(quit()));
+    connect(&mainGame->dField, SIGNAL(singlePlayRefreshSingleFinished()), &loop, SLOT(quit()));
+    connect(&mainGame->dField, SIGNAL(singlePlayReloadFinished()), &loop, SLOT(quit()));
+
     while (pbuf - msg < (int)len) {
         if(is_closing || !is_continuing)
             return false;
@@ -134,7 +154,9 @@ bool SingleMode::SinglePlayAnalyze(char* msg, unsigned int len)
             pbuf += count * 11;
             count = BufferIO::ReadInt8(pbuf);
             pbuf += count * 8 + 2;
-            SinglePlayRefresh();
+//            SinglePlayRefresh();
+            QMetaObject::invokeMethod(&mainGame->dField,"SinglePlayRefresh",Qt::QueuedConnection);
+            loop.exec();
             if(!DuelClient::ClientAnalyze(offset, pbuf - offset)) {
                 mainGame->singleSignal.reset();
                 mainGame->singleSignal.wait();
@@ -156,7 +178,9 @@ bool SingleMode::SinglePlayAnalyze(char* msg, unsigned int len)
             pbuf += count * 7;
             count = BufferIO::ReadInt8(pbuf);
             pbuf += count * 11 + 2;
-            SinglePlayRefresh();
+//            SinglePlayRefresh();
+            QMetaObject::invokeMethod(&mainGame->dField,"SinglePlayRefresh",Qt::QueuedConnection);
+            loop.exec();
             if(!DuelClient::ClientAnalyze(offset, pbuf - offset)) {
                 mainGame->singleSignal.reset();
                 mainGame->singleSignal.wait();
@@ -285,7 +309,10 @@ bool SingleMode::SinglePlayAnalyze(char* msg, unsigned int len)
         case MSG_SHUFFLE_DECK: {
             player = BufferIO::ReadInt8(pbuf);
             DuelClient::ClientAnalyze(offset, pbuf - offset);
-            SinglePlayRefreshDeck(player);
+//            SinglePlayRefreshDeck(player);
+            QMetaObject::invokeMethod(&mainGame->dField,"SinglePlayRefreshDeck",Qt::QueuedConnection,
+                                      Q_ARG(int, player));
+            loop.exec();
             break;
         }
         case MSG_SHUFFLE_HAND: {
@@ -303,7 +330,10 @@ bool SingleMode::SinglePlayAnalyze(char* msg, unsigned int len)
         case MSG_SWAP_GRAVE_DECK: {
             player = BufferIO::ReadInt8(pbuf);
             DuelClient::ClientAnalyze(offset, pbuf - offset);
-            SinglePlayRefreshGrave(player);
+//            SinglePlayRefreshGrave(player);
+            QMetaObject::invokeMethod(&mainGame->dField,"SinglePlayRefreshGrave",Qt::QueuedConnection,
+                                      Q_ARG(int, player));
+            loop.exec();
             break;
         }
         case MSG_REVERSE_DECK: {
@@ -323,13 +353,15 @@ bool SingleMode::SinglePlayAnalyze(char* msg, unsigned int len)
         }
         case MSG_NEW_TURN: {
             player = BufferIO::ReadInt8(pbuf);
-            DuelClient::ClientAnalyze(offset, pbuf - offset);
+            //DuelClient::ClientAnalyze(offset, pbuf - offset);     //TODO: causing crash
             break;
         }
         case MSG_NEW_PHASE: {
             pbuf++;
             DuelClient::ClientAnalyze(offset, pbuf - offset);
-            SinglePlayRefresh();
+//            SinglePlayRefresh();
+            QMetaObject::invokeMethod(&mainGame->dField,"SinglePlayRefresh",Qt::QueuedConnection);
+            loop.exec();
             break;
         }
         case MSG_MOVE: {
@@ -344,7 +376,12 @@ bool SingleMode::SinglePlayAnalyze(char* msg, unsigned int len)
             pbuf += 16;
             DuelClient::ClientAnalyze(offset, pbuf - offset);
             if(cl && !(cl & 0x80) && (pl != cl || pc != cc))
-                SinglePlayRefreshSingle(cc, cl, cs);
+//                SinglePlayRefreshSingle(cc, cl, cs);
+            QMetaObject::invokeMethod(&mainGame->dField,"SinglePlayRefreshSingle",Qt::QueuedConnection,
+                                      Q_ARG(int, cc),
+                                      Q_ARG(int, cl),
+                                      Q_ARG(int, cs));
+            loop.exec();
             break;
         }
         case MSG_POS_CHANGE: {
@@ -374,7 +411,9 @@ bool SingleMode::SinglePlayAnalyze(char* msg, unsigned int len)
         }
         case MSG_SUMMONED: {
             DuelClient::ClientAnalyze(offset, pbuf - offset);
-            SinglePlayRefresh();
+//            SinglePlayRefresh();
+            QMetaObject::invokeMethod(&mainGame->dField,"SinglePlayRefresh",Qt::QueuedConnection);
+            loop.exec();
             break;
         }
         case MSG_SPSUMMONING: {
@@ -384,7 +423,9 @@ bool SingleMode::SinglePlayAnalyze(char* msg, unsigned int len)
         }
         case MSG_SPSUMMONED: {
             DuelClient::ClientAnalyze(offset, pbuf - offset);
-            SinglePlayRefresh();
+//            SinglePlayRefresh();
+            QMetaObject::invokeMethod(&mainGame->dField,"SinglePlayRefresh",Qt::QueuedConnection);
+            loop.exec();
             break;
         }
         case MSG_FLIPSUMMONING: {
@@ -394,7 +435,9 @@ bool SingleMode::SinglePlayAnalyze(char* msg, unsigned int len)
         }
         case MSG_FLIPSUMMONED: {
             DuelClient::ClientAnalyze(offset, pbuf - offset);
-            SinglePlayRefresh();
+//            SinglePlayRefresh();
+            QMetaObject::invokeMethod(&mainGame->dField,"SinglePlayRefresh",Qt::QueuedConnection);
+            loop.exec();
             break;
         }
         case MSG_CHAINING: {
@@ -405,7 +448,9 @@ bool SingleMode::SinglePlayAnalyze(char* msg, unsigned int len)
         case MSG_CHAINED: {
             pbuf++;
             DuelClient::ClientAnalyze(offset, pbuf - offset);
-            SinglePlayRefresh();
+//            SinglePlayRefresh();
+            QMetaObject::invokeMethod(&mainGame->dField,"SinglePlayRefresh",Qt::QueuedConnection);
+            loop.exec();
             break;
         }
         case MSG_CHAIN_SOLVING: {
@@ -416,14 +461,24 @@ bool SingleMode::SinglePlayAnalyze(char* msg, unsigned int len)
         case MSG_CHAIN_SOLVED: {
             pbuf++;
             DuelClient::ClientAnalyze(offset, pbuf - offset);
-            SinglePlayRefresh();
+//            SinglePlayRefresh();
+            QMetaObject::invokeMethod(&mainGame->dField,"SinglePlayRefresh",Qt::QueuedConnection);
+            loop.exec();
             break;
         }
         case MSG_CHAIN_END: {
             DuelClient::ClientAnalyze(offset, pbuf - offset);
-            SinglePlayRefresh();
-            SinglePlayRefreshDeck(0);
-            SinglePlayRefreshDeck(1);
+//            SinglePlayRefresh();
+            QMetaObject::invokeMethod(&mainGame->dField,"SinglePlayRefresh",Qt::QueuedConnection);
+            loop.exec();
+//            SinglePlayRefreshDeck(0);
+//            SinglePlayRefreshDeck(1);
+            QMetaObject::invokeMethod(&mainGame->dField,"SinglePlayRefreshDeck",Qt::QueuedConnection,
+                                      Q_ARG(int, 0));
+            loop.exec();
+            QMetaObject::invokeMethod(&mainGame->dField,"SinglePlayRefreshDeck",Qt::QueuedConnection,
+                                      Q_ARG(int, 1));
+            loop.exec();
             break;
         }
         case MSG_CHAIN_NEGATED: {
@@ -523,12 +578,16 @@ bool SingleMode::SinglePlayAnalyze(char* msg, unsigned int len)
         }
         case MSG_DAMAGE_STEP_START: {
             DuelClient::ClientAnalyze(offset, pbuf - offset);
-            SinglePlayRefresh();
+//            SinglePlayRefresh();
+            QMetaObject::invokeMethod(&mainGame->dField,"SinglePlayRefresh",Qt::QueuedConnection);
+            loop.exec();
             break;
         }
         case MSG_DAMAGE_STEP_END: {
             DuelClient::ClientAnalyze(offset, pbuf - offset);
-            SinglePlayRefresh();
+//            SinglePlayRefresh();
+            QMetaObject::invokeMethod(&mainGame->dField,"SinglePlayRefresh",Qt::QueuedConnection);
+            loop.exec();
             break;
         }
         case MSG_MISSED_EFFECT: {
@@ -595,8 +654,14 @@ bool SingleMode::SinglePlayAnalyze(char* msg, unsigned int len)
             player = pbuf[0];
             pbuf += pbuf[3] * 4 + 8;
             DuelClient::ClientAnalyze(offset, pbuf - offset);
-            SinglePlayRefreshDeck(player);
-            SinglePlayRefreshExtra(player);
+//            SinglePlayRefreshDeck(player);
+            QMetaObject::invokeMethod(&mainGame->dField,"SinglePlayRefreshDeck",Qt::QueuedConnection,
+                                      Q_ARG(int, player));
+            loop.exec();
+//            SinglePlayRefreshExtra(player);
+            QMetaObject::invokeMethod(&mainGame->dField,"SinglePlayRefreshExtra",Qt::QueuedConnection,
+                                      Q_ARG(int, player));
+            loop.exec();
             break;
         }
         case MSG_MATCH_KILL: {
@@ -605,7 +670,10 @@ bool SingleMode::SinglePlayAnalyze(char* msg, unsigned int len)
         }
         case MSG_RELOAD_FIELD: {
             qDebug()<<"MSG_RELOAD_FIELD enter";
-            mainGame->dField.Clear();
+//            mainGame->dField.Clear();
+            QMetaObject::invokeMethod(&mainGame->dField,"Clear",Qt::QueuedConnection);
+            loop.exec();
+
             int val = 0;
             for(int p = 0; p < 2; ++p) {
                 mainGame->dInfo.lp[p] = BufferIO::ReadInt32(pbuf);
@@ -614,7 +682,16 @@ bool SingleMode::SinglePlayAnalyze(char* msg, unsigned int len)
                     val = BufferIO::ReadInt8(pbuf);
                     if(val) {
                         ClientCard* ccard = new ClientCard;
-                        mainGame->dField.AddCard(ccard, p, LOCATION_MZONE, seq);
+						ClientCard* tmp = ccard;
+//                        mainGame->dField.AddCard(p, LOCATION_MZONE, seq);
+                        QMetaObject::invokeMethod(&mainGame->dField,"AddCard",Qt::QueuedConnection,
+                                                  Q_ARG(int, p),
+                                                  Q_ARG(int, LOCATION_MZONE),
+                                                  Q_ARG(int, seq),
+                                                  Q_ARG(ClientCard*, 0),
+                                                  Q_ARG(ClientCard**, &ccard));
+                        loop.exec();
+						delete tmp;	// ccard reallocated in the above function
                         ccard->position = BufferIO::ReadInt8(pbuf);
                         val = BufferIO::ReadInt8(pbuf);
                         if(val) {
@@ -633,38 +710,75 @@ bool SingleMode::SinglePlayAnalyze(char* msg, unsigned int len)
                     val = BufferIO::ReadInt8(pbuf);
                     if(val) {
                         ClientCard* ccard = new ClientCard;
-                        mainGame->dField.AddCard(ccard, p, LOCATION_SZONE, seq);
+						ClientCard* tmp = ccard;
+//                        mainGame->dField.AddCard(ccard, p, LOCATION_SZONE, seq);
+                        QMetaObject::invokeMethod(&mainGame->dField,"AddCard",Qt::QueuedConnection,
+                                                  Q_ARG(int, p),
+                                                  Q_ARG(int, LOCATION_SZONE),
+                                                  Q_ARG(int, seq),
+                                                  Q_ARG(ClientCard*, 0),
+                                                  Q_ARG(ClientCard**, &ccard));
+                        loop.exec();
+						delete tmp;
                         ccard->position = BufferIO::ReadInt8(pbuf);
                     }
                 }
                 val = BufferIO::ReadInt8(pbuf);
                 for(int seq = 0; seq < val; ++seq) {
-                    ClientCard* ccard = new ClientCard;
-                    mainGame->dField.AddCard(ccard, p, LOCATION_DECK, seq);
+//                    ClientCard* ccard = new ClientCard();
+//                    mainGame->dField.AddCard(ccard, p, LOCATION_DECK, seq);
+                    QMetaObject::invokeMethod(&mainGame->dField,"AddCard",Qt::QueuedConnection,
+                                              Q_ARG(int, p),
+                                              Q_ARG(int, LOCATION_DECK),
+                                              Q_ARG(int, seq));
+                    loop.exec();
+
                 }
                 val = BufferIO::ReadInt8(pbuf);
                 for(int seq = 0; seq < val; ++seq) {
-                    ClientCard* ccard = new ClientCard;
-                    mainGame->dField.AddCard(ccard, p, LOCATION_HAND, seq);                    
+//                    ClientCard* ccard = new ClientCard;
+//                    mainGame->dField.AddCard(ccard, p, LOCATION_HAND, seq);
+                    QMetaObject::invokeMethod(&mainGame->dField,"AddCard",Qt::QueuedConnection,
+                                              Q_ARG(int, p),
+                                              Q_ARG(int, LOCATION_HAND),
+                                              Q_ARG(int, seq));
+                    loop.exec();
                 }
                 val = BufferIO::ReadInt8(pbuf);
                 for(int seq = 0; seq < val; ++seq) {
-                    ClientCard* ccard = new ClientCard;
-                    mainGame->dField.AddCard(ccard, p, LOCATION_GRAVE, seq);   
+//                    ClientCard* ccard = new ClientCard;
+//                    mainGame->dField.AddCard(ccard, p, LOCATION_GRAVE, seq);
+                    QMetaObject::invokeMethod(&mainGame->dField,"AddCard",Qt::QueuedConnection,
+                                              Q_ARG(int, p),
+                                              Q_ARG(int, LOCATION_GRAVE),
+                                              Q_ARG(int, seq));
+                    loop.exec();
                 }
                 val = BufferIO::ReadInt8(pbuf);
                 for(int seq = 0; seq < val; ++seq) {
-                    ClientCard* ccard = new ClientCard;
-                    mainGame->dField.AddCard(ccard, p, LOCATION_REMOVED, seq);     
+//                    ClientCard* ccard = new ClientCard;
+//                    mainGame->dField.AddCard(ccard, p, LOCATION_REMOVED, seq);
+                    QMetaObject::invokeMethod(&mainGame->dField,"AddCard",Qt::QueuedConnection,
+                                              Q_ARG(int, p),
+                                              Q_ARG(int, LOCATION_REMOVED),
+                                              Q_ARG(int, seq));
+                    loop.exec();
                 }
                 val = BufferIO::ReadInt8(pbuf);
                 for(int seq = 0; seq < val; ++seq) {
-                    ClientCard* ccard = new ClientCard;
-                    mainGame->dField.AddCard(ccard, p, LOCATION_EXTRA, seq);      
+//                    ClientCard* ccard = new ClientCard;
+//                    mainGame->dField.AddCard(ccard, p, LOCATION_EXTRA, seq);
+                    QMetaObject::invokeMethod(&mainGame->dField,"AddCard",Qt::QueuedConnection,
+                                              Q_ARG(int, p),
+                                              Q_ARG(int, LOCATION_EXTRA),
+                                              Q_ARG(int, seq));
+                    loop.exec();
                 }
             }
             BufferIO::ReadInt8(pbuf); //chain count, always 0
-            SinglePlayReload();
+//            SinglePlayReload();
+            QMetaObject::invokeMethod(&mainGame->dField,"SinglePlayReload",Qt::QueuedConnection);
+            loop.exec();
 //            mainGame->dField.RefreshAllCards(); // updates the position and rotation
             emit mainGame->dInfo.lp1Changed();
             emit mainGame->dInfo.lp2Changed();
@@ -705,163 +819,222 @@ bool SingleMode::SinglePlayAnalyze(char* msg, unsigned int len)
     return is_continuing;
 }
 
-void SingleMode::SinglePlayRefresh(int flag) {
-    Buffer queryBuffer;
-    query_field_card(pduel, 0, LOCATION_MZONE, flag, queryBuffer.buffer, 0);
-    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
-                              Q_ARG(int, mainGame->LocalPlayer(0)),
-                              Q_ARG(int, LOCATION_MZONE),
-                              Q_ARG(Buffer, queryBuffer));
-    query_field_card(pduel, 1, LOCATION_MZONE, flag, queryBuffer.buffer, 0);
-    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
-                              Q_ARG(int, mainGame->LocalPlayer(1)),
-                              Q_ARG(int, LOCATION_MZONE),
-                              Q_ARG(Buffer, queryBuffer));
-    query_field_card(pduel, 0, LOCATION_SZONE, flag, queryBuffer.buffer, 0);
-    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
-                              Q_ARG(int, mainGame->LocalPlayer(0)),
-                              Q_ARG(int, LOCATION_SZONE),
-                              Q_ARG(Buffer, queryBuffer));
-    query_field_card(pduel, 1, LOCATION_SZONE, flag, queryBuffer.buffer, 0);
-    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
-                              Q_ARG(int, mainGame->LocalPlayer(1)),
-                              Q_ARG(int, LOCATION_SZONE),
-                              Q_ARG(Buffer, queryBuffer));
-    query_field_card(pduel, 0, LOCATION_HAND, flag, queryBuffer.buffer, 0);
-    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
-                              Q_ARG(int, mainGame->LocalPlayer(0)),
-                              Q_ARG(int, LOCATION_HAND),
-                              Q_ARG(Buffer, queryBuffer));
-    query_field_card(pduel, 1, LOCATION_HAND, flag, queryBuffer.buffer, 0);
-    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
-                              Q_ARG(int, mainGame->LocalPlayer(1)),
-                              Q_ARG(int, LOCATION_HAND),
-                              Q_ARG(Buffer, queryBuffer));
-}
+//void SingleMode::SinglePlayRefresh(int flag) {
+//    Buffer queryBuffer;
+//    QEventLoop loop;
+//    connect(&mainGame->dField, SIGNAL(updateFieldCardFinished()), &loop, SLOT(quit()));
 
-void SingleMode::SinglePlayRefreshHand(int player, int flag) {
-    Buffer queryBuffer;
-    query_field_card(pduel, player, LOCATION_HAND, flag, queryBuffer.buffer, 0);
-    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
-                              Q_ARG(int, mainGame->LocalPlayer(player)),
-                              Q_ARG(int, LOCATION_HAND),
-                              Q_ARG(Buffer, queryBuffer));
-}
+//    query_field_card(pduel, 0, LOCATION_MZONE, flag, queryBuffer.buffer, 0);
+//    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
+//                              Q_ARG(int, mainGame->LocalPlayer(0)),
+//                              Q_ARG(int, LOCATION_MZONE),
+//                              Q_ARG(Buffer, queryBuffer));
+//    loop.exec();
 
-void SingleMode::SinglePlayRefreshGrave(int player, int flag) {
-    Buffer queryBuffer;
-    query_field_card(pduel, player, LOCATION_GRAVE, flag, queryBuffer.buffer, 0);
-    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
-                              Q_ARG(int, mainGame->LocalPlayer(player)),
-                              Q_ARG(int, LOCATION_GRAVE),
-                              Q_ARG(Buffer, queryBuffer));
-}
-void SingleMode::SinglePlayRefreshDeck(int player, int flag) {
-    Buffer queryBuffer;
-    query_field_card(pduel, player, LOCATION_DECK, flag, queryBuffer.buffer, 0);
-    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
-                              Q_ARG(int, mainGame->LocalPlayer(player)),
-                              Q_ARG(int, LOCATION_DECK),
-                              Q_ARG(Buffer, queryBuffer));
-}
+//    query_field_card(pduel, 1, LOCATION_MZONE, flag, queryBuffer.buffer, 0);
+//    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
+//                              Q_ARG(int, mainGame->LocalPlayer(1)),
+//                              Q_ARG(int, LOCATION_MZONE),
+//                              Q_ARG(Buffer, queryBuffer));
+//    loop.exec();
 
-void SingleMode::SinglePlayRefreshExtra(int player, int flag) {
-    Buffer queryBuffer;
-    query_field_card(pduel, player, LOCATION_EXTRA, flag, queryBuffer.buffer, 0);
-    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
-                              Q_ARG(int, mainGame->LocalPlayer(player)),
-                              Q_ARG(int, LOCATION_EXTRA),
-                              Q_ARG(Buffer, queryBuffer));
-}
+//    query_field_card(pduel, 0, LOCATION_SZONE, flag, queryBuffer.buffer, 0);
+//    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
+//                              Q_ARG(int, mainGame->LocalPlayer(0)),
+//                              Q_ARG(int, LOCATION_SZONE),
+//                              Q_ARG(Buffer, queryBuffer));
+//    loop.exec();
 
-void SingleMode::SinglePlayRefreshSingle(int player, int location, int sequence, int flag) {
-    Buffer queryBuffer;
-    query_card(pduel, player, location, sequence, flag, queryBuffer.buffer, 0);
-    QMetaObject::invokeMethod(&mainGame->dField,"UpdateCard",Qt::QueuedConnection,
-                              Q_ARG(int, mainGame->LocalPlayer(player)),
-                              Q_ARG(int, location),
-                              Q_ARG(int, sequence),
-                              Q_ARG(Buffer, queryBuffer));
-}
+//    query_field_card(pduel, 1, LOCATION_SZONE, flag, queryBuffer.buffer, 0);
+//    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
+//                              Q_ARG(int, mainGame->LocalPlayer(1)),
+//                              Q_ARG(int, LOCATION_SZONE),
+//                              Q_ARG(Buffer, queryBuffer));
+//    loop.exec();
 
-void SingleMode::SinglePlayReload()
-{
-    Buffer queryBuffer;
-    unsigned int flag = 0x7fdfff;
-    query_field_card(pduel, 0, LOCATION_MZONE, flag, queryBuffer.buffer, 0);
-    qDebug()<<"SinglePlayReload enter ";
-    qDebug()<<queryBuffer.buffer[0];
-    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
-                              Q_ARG(int, mainGame->LocalPlayer(0)),
-                              Q_ARG(int, LOCATION_MZONE),
-                              Q_ARG(Buffer, queryBuffer));
-    qDebug()<<"SinglePlayReload exit";
-    query_field_card(pduel, 1, LOCATION_MZONE, flag, queryBuffer.buffer, 0);
-    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
-                              Q_ARG(int, mainGame->LocalPlayer(1)),
-                              Q_ARG(int, LOCATION_MZONE),
-                              Q_ARG(Buffer, queryBuffer));
-    query_field_card(pduel, 0, LOCATION_SZONE, flag, queryBuffer.buffer, 0);
-    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
-                              Q_ARG(int, mainGame->LocalPlayer(0)),
-                              Q_ARG(int, LOCATION_SZONE),
-                              Q_ARG(Buffer, queryBuffer));
-    query_field_card(pduel, 1, LOCATION_SZONE, flag, queryBuffer.buffer, 0);
-    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
-                              Q_ARG(int, mainGame->LocalPlayer(1)),
-                              Q_ARG(int, LOCATION_SZONE),
-                              Q_ARG(Buffer, queryBuffer));
-    query_field_card(pduel, 0, LOCATION_HAND, flag, queryBuffer.buffer, 0);
-    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
-                              Q_ARG(int, mainGame->LocalPlayer(0)),
-                              Q_ARG(int, LOCATION_HAND),
-                              Q_ARG(Buffer, queryBuffer));
-    query_field_card(pduel, 1, LOCATION_HAND, flag, queryBuffer.buffer, 0);
-    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
-                              Q_ARG(int, mainGame->LocalPlayer(1)),
-                              Q_ARG(int, LOCATION_HAND),
-                              Q_ARG(Buffer, queryBuffer));
-    query_field_card(pduel, 0, LOCATION_DECK, flag, queryBuffer.buffer, 0);
-    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
-                              Q_ARG(int, mainGame->LocalPlayer(0)),
-                              Q_ARG(int, LOCATION_DECK),
-                              Q_ARG(Buffer, queryBuffer));
-    query_field_card(pduel, 1, LOCATION_DECK, flag, queryBuffer.buffer, 0);
-    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
-                              Q_ARG(int, mainGame->LocalPlayer(1)),
-                              Q_ARG(int, LOCATION_DECK),
-                              Q_ARG(Buffer, queryBuffer));
-    query_field_card(pduel, 0, LOCATION_EXTRA, flag, queryBuffer.buffer, 0);
-    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
-                              Q_ARG(int, mainGame->LocalPlayer(0)),
-                              Q_ARG(int, LOCATION_EXTRA),
-                              Q_ARG(Buffer, queryBuffer));
-    query_field_card(pduel, 1, LOCATION_EXTRA, flag, queryBuffer.buffer, 0);
-    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
-                              Q_ARG(int, mainGame->LocalPlayer(1)),
-                              Q_ARG(int, LOCATION_EXTRA),
-                              Q_ARG(Buffer, queryBuffer));
-    query_field_card(pduel, 0, LOCATION_GRAVE, flag, queryBuffer.buffer, 0);
-    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
-                              Q_ARG(int, mainGame->LocalPlayer(0)),
-                              Q_ARG(int, LOCATION_GRAVE),
-                              Q_ARG(Buffer, queryBuffer));
-    query_field_card(pduel, 1, LOCATION_GRAVE, flag, queryBuffer.buffer, 0);
-    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
-                              Q_ARG(int, mainGame->LocalPlayer(1)),
-                              Q_ARG(int, LOCATION_GRAVE),
-                              Q_ARG(Buffer, queryBuffer));
-    query_field_card(pduel, 0, LOCATION_REMOVED, flag, queryBuffer.buffer, 0);
-    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
-                              Q_ARG(int, mainGame->LocalPlayer(0)),
-                              Q_ARG(int, LOCATION_REMOVED),
-                              Q_ARG(Buffer, queryBuffer));
-    query_field_card(pduel, 1, LOCATION_REMOVED, flag, queryBuffer.buffer, 0);
-    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
-                              Q_ARG(int, mainGame->LocalPlayer(1)),
-                              Q_ARG(int, LOCATION_REMOVED),
-                              Q_ARG(Buffer, queryBuffer));
-}
+//    query_field_card(pduel, 0, LOCATION_HAND, flag, queryBuffer.buffer, 0);
+//    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
+//                              Q_ARG(int, mainGame->LocalPlayer(0)),
+//                              Q_ARG(int, LOCATION_HAND),
+//                              Q_ARG(Buffer, queryBuffer));
+//    loop.exec();
+
+//    query_field_card(pduel, 1, LOCATION_HAND, flag, queryBuffer.buffer, 0);
+//    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
+//                              Q_ARG(int, mainGame->LocalPlayer(1)),
+//                              Q_ARG(int, LOCATION_HAND),
+//                              Q_ARG(Buffer, queryBuffer));
+//    loop.exec();
+//}
+
+//void SingleMode::SinglePlayRefreshHand(int player, int flag) {
+//    Buffer queryBuffer;
+//    QEventLoop loop;
+//    connect(&mainGame->dField, SIGNAL(updateFieldCardFinished()), &loop, SLOT(quit()));
+//    query_field_card(pduel, player, LOCATION_HAND, flag, queryBuffer.buffer, 0);
+//    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
+//                              Q_ARG(int, mainGame->LocalPlayer(player)),
+//                              Q_ARG(int, LOCATION_HAND),
+//                              Q_ARG(Buffer, queryBuffer));
+//    loop.exec();
+//}
+
+//void SingleMode::SinglePlayRefreshGrave(int player, int flag) {
+//    Buffer queryBuffer;
+//    QEventLoop loop;
+//    connect(&mainGame->dField, SIGNAL(updateFieldCardFinished()), &loop, SLOT(quit()));
+//    query_field_card(pduel, player, LOCATION_GRAVE, flag, queryBuffer.buffer, 0);
+//    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
+//                              Q_ARG(int, mainGame->LocalPlayer(player)),
+//                              Q_ARG(int, LOCATION_GRAVE),
+//                              Q_ARG(Buffer, queryBuffer));
+//    loop.exec();
+//}
+//void SingleMode::SinglePlayRefreshDeck(int player, int flag) {
+//    Buffer queryBuffer;
+//    QEventLoop loop;
+//    connect(&mainGame->dField, SIGNAL(updateFieldCardFinished()), &loop, SLOT(quit()));
+//    query_field_card(pduel, player, LOCATION_DECK, flag, queryBuffer.buffer, 0);
+//    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
+//                              Q_ARG(int, mainGame->LocalPlayer(player)),
+//                              Q_ARG(int, LOCATION_DECK),
+//                              Q_ARG(Buffer, queryBuffer));
+//    loop.exec();
+//}
+
+//void SingleMode::SinglePlayRefreshExtra(int player, int flag) {
+//    Buffer queryBuffer;
+//    QEventLoop loop;
+//    connect(&mainGame->dField, SIGNAL(updateFieldCardFinished()), &loop, SLOT(quit()));
+//    query_field_card(pduel, player, LOCATION_EXTRA, flag, queryBuffer.buffer, 0);
+//    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
+//                              Q_ARG(int, mainGame->LocalPlayer(player)),
+//                              Q_ARG(int, LOCATION_EXTRA),
+//                              Q_ARG(Buffer, queryBuffer));
+//    loop.exec();
+//}
+
+//void SingleMode::SinglePlayRefreshSingle(int player, int location, int sequence, int flag) {
+//    Buffer queryBuffer;
+//    QEventLoop loop;
+//    connect(&mainGame->dField, SIGNAL(updateCardFinished()), &loop, SLOT(quit()));
+//    query_card(pduel, player, location, sequence, flag, queryBuffer.buffer, 0);
+//    QMetaObject::invokeMethod(&mainGame->dField,"UpdateCard",Qt::QueuedConnection,
+//                              Q_ARG(int, mainGame->LocalPlayer(player)),
+//                              Q_ARG(int, location),
+//                              Q_ARG(int, sequence),
+//                              Q_ARG(Buffer, queryBuffer));
+//    loop.exec();
+//}
+
+//void SingleMode::SinglePlayReload()
+//{
+//    Buffer queryBuffer;
+//    unsigned int flag = 0x7fdfff;
+//    QEventLoop loop;
+//    connect(&mainGame->dField, SIGNAL(updateFieldCardFinished()), &loop, SLOT(quit()));
+
+//    query_field_card(pduel, 0, LOCATION_MZONE, flag, queryBuffer.buffer, 0);
+//    qDebug()<<"SinglePlayReload enter ";
+//    qDebug()<<queryBuffer.buffer[0];
+//    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
+//                              Q_ARG(int, mainGame->LocalPlayer(0)),
+//                              Q_ARG(int, LOCATION_MZONE),
+//                              Q_ARG(Buffer, queryBuffer));
+//    loop.exec();
+//    qDebug()<<"SinglePlayReload exit";
+
+//    query_field_card(pduel, 1, LOCATION_MZONE, flag, queryBuffer.buffer, 0);
+//    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
+//                              Q_ARG(int, mainGame->LocalPlayer(1)),
+//                              Q_ARG(int, LOCATION_MZONE),
+//                              Q_ARG(Buffer, queryBuffer));
+//    loop.exec();
+
+//    query_field_card(pduel, 0, LOCATION_SZONE, flag, queryBuffer.buffer, 0);
+//    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
+//                              Q_ARG(int, mainGame->LocalPlayer(0)),
+//                              Q_ARG(int, LOCATION_SZONE),
+//                              Q_ARG(Buffer, queryBuffer));
+//    loop.exec();
+
+//    query_field_card(pduel, 1, LOCATION_SZONE, flag, queryBuffer.buffer, 0);
+//    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
+//                              Q_ARG(int, mainGame->LocalPlayer(1)),
+//                              Q_ARG(int, LOCATION_SZONE),
+//                              Q_ARG(Buffer, queryBuffer));
+//    loop.exec();
+
+//    query_field_card(pduel, 0, LOCATION_HAND, flag, queryBuffer.buffer, 0);
+//    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
+//                              Q_ARG(int, mainGame->LocalPlayer(0)),
+//                              Q_ARG(int, LOCATION_HAND),
+//                              Q_ARG(Buffer, queryBuffer));
+//    loop.exec();
+
+//    query_field_card(pduel, 1, LOCATION_HAND, flag, queryBuffer.buffer, 0);
+//    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
+//                              Q_ARG(int, mainGame->LocalPlayer(1)),
+//                              Q_ARG(int, LOCATION_HAND),
+//                              Q_ARG(Buffer, queryBuffer));
+//    loop.exec();
+
+//    query_field_card(pduel, 0, LOCATION_DECK, flag, queryBuffer.buffer, 0);
+//    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
+//                              Q_ARG(int, mainGame->LocalPlayer(0)),
+//                              Q_ARG(int, LOCATION_DECK),
+//                              Q_ARG(Buffer, queryBuffer));
+//    loop.exec();
+
+//    query_field_card(pduel, 1, LOCATION_DECK, flag, queryBuffer.buffer, 0);
+//    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
+//                              Q_ARG(int, mainGame->LocalPlayer(1)),
+//                              Q_ARG(int, LOCATION_DECK),
+//                              Q_ARG(Buffer, queryBuffer));
+//    loop.exec();
+
+//    query_field_card(pduel, 0, LOCATION_EXTRA, flag, queryBuffer.buffer, 0);
+//    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
+//                              Q_ARG(int, mainGame->LocalPlayer(0)),
+//                              Q_ARG(int, LOCATION_EXTRA),
+//                              Q_ARG(Buffer, queryBuffer));
+//    loop.exec();
+
+//    query_field_card(pduel, 1, LOCATION_EXTRA, flag, queryBuffer.buffer, 0);
+//    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
+//                              Q_ARG(int, mainGame->LocalPlayer(1)),
+//                              Q_ARG(int, LOCATION_EXTRA),
+//                              Q_ARG(Buffer, queryBuffer));
+//    loop.exec();
+
+//    query_field_card(pduel, 0, LOCATION_GRAVE, flag, queryBuffer.buffer, 0);
+//    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
+//                              Q_ARG(int, mainGame->LocalPlayer(0)),
+//                              Q_ARG(int, LOCATION_GRAVE),
+//                              Q_ARG(Buffer, queryBuffer));
+//    loop.exec();
+
+//    query_field_card(pduel, 1, LOCATION_GRAVE, flag, queryBuffer.buffer, 0);
+//    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
+//                              Q_ARG(int, mainGame->LocalPlayer(1)),
+//                              Q_ARG(int, LOCATION_GRAVE),
+//                              Q_ARG(Buffer, queryBuffer));
+//    loop.exec();
+
+//    query_field_card(pduel, 0, LOCATION_REMOVED, flag, queryBuffer.buffer, 0);
+//    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
+//                              Q_ARG(int, mainGame->LocalPlayer(0)),
+//                              Q_ARG(int, LOCATION_REMOVED),
+//                              Q_ARG(Buffer, queryBuffer));
+//    loop.exec();
+
+//    query_field_card(pduel, 1, LOCATION_REMOVED, flag, queryBuffer.buffer, 0);
+//    QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
+//                              Q_ARG(int, mainGame->LocalPlayer(1)),
+//                              Q_ARG(int, LOCATION_REMOVED),
+//                              Q_ARG(Buffer, queryBuffer));
+//    loop.exec();
+//}
 
 int SingleMode::MessageHandler(long fduel, int type) {
     if(!enable_log)

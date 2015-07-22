@@ -3,12 +3,13 @@
 
 #include <QObject>
 #include <QString>
+#include <QEventLoop>
 
 namespace glaze {
 
-struct Buffer {
-    unsigned char buffer[0x1000];
-};
+//struct Buffer {
+//    unsigned char buffer[0x1000];
+//};
 
 class SingleMode : public QObject
 {
@@ -18,23 +19,18 @@ public:
     static void SetResponse(unsigned char* resp);
     static bool SinglePlayAnalyze(char* msg, unsigned int len);
 
-    static void SinglePlayRefresh(int flag = 0x781fff);
-    static void SinglePlayRefreshHand(int player, int flag = 0x781fff);
-    static void SinglePlayRefreshGrave(int player, int flag = 0x181fff);
-    static void SinglePlayRefreshDeck(int player, int flag = 0x181fff);
-    static void SinglePlayRefreshExtra(int player, int flag = 0x181fff);
-    static void SinglePlayRefreshSingle(int player, int location, int sequence, int flag = 0x781fff);
-    static void SinglePlayReload();
-
     static int MessageHandler(long fduel, int type);
     static int enable_log;
 
     static bool is_closing;
     static bool is_continuing;
     static QString name;
-private:
+protected:
     static long pduel;
     static wchar_t event_string[256];
+
+private:
+
 
 public slots:
     void singlePlayStart();
@@ -43,6 +39,6 @@ signals:
 };
 }
 
-Q_DECLARE_METATYPE(glaze::Buffer)
+//Q_DECLARE_METATYPE(glaze::Buffer)
 
 #endif // SINGLEMODE_H

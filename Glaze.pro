@@ -65,3 +65,17 @@ unix|win32: LIBS += -llua
 
 #needed in Ubuntu 14.04
 unix|win32: LIBS += -ldl
+
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/sqlite3/ -lsqlite3
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/sqlite3/ -lsqlite3d
+else:macx: LIBS += -L$$PWD/sqlite3/ -lsqlite3
+
+INCLUDEPATH += $$PWD/sqlite3
+DEPENDPATH += $$PWD/sqlite3
+
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/lua/lib/ -llua
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/lua/lib/ -lluad
+else:macx: LIBS += -L$$PWD/lua/lib/ -llua
+
+INCLUDEPATH += $$PWD/lua
+DEPENDPATH += $$PWD/lua

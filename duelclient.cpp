@@ -39,8 +39,11 @@ DuelClient::DuelClient(QObject *parent) : QObject(parent)
 int DuelClient::ClientAnalyze(char * msg, unsigned int len)
 {
     char* pbuf = msg;
-    Buffer queryBuffer;
-    strncpy((char*)queryBuffer.buffer, pbuf, len);
+    QEventLoop loop;
+    connect(&mainGame->dField, SIGNAL(updateFieldCardFinished()), &loop, SLOT(quit()));
+    connect(&mainGame->dField, SIGNAL(updateCardFinished()), &loop, SLOT(quit()));
+//    Buffer queryBuffer;
+//    strncpy((char*)queryBuffer.buffer, pbuf, len);
     wchar_t textBuffer[256];
     mainGame->dInfo.curMsg = BufferIO::ReadUInt8(pbuf);
     mainGame->wCmdMenu = false;
@@ -213,7 +216,8 @@ int DuelClient::ClientAnalyze(char * msg, unsigned int len)
         QMetaObject::invokeMethod(&mainGame->dField,"UpdateFieldCard",Qt::QueuedConnection,
                                   Q_ARG(int, player),
                                   Q_ARG(int, location),
-                                  Q_ARG(Buffer, queryBuffer));
+                                  Q_ARG(char*, pbuf));
+        loop.exec();
         return true;
     }
 
@@ -225,7 +229,8 @@ int DuelClient::ClientAnalyze(char * msg, unsigned int len)
                                   Q_ARG(int, player),
                                   Q_ARG(int, loc),
                                   Q_ARG(int, seq),
-                                  Q_ARG(Buffer, queryBuffer));
+                                  Q_ARG(char*, pbuf));
+        loop.exec();
         break;
     }
 
@@ -1185,7 +1190,7 @@ int DuelClient::ClientAnalyze(char * msg, unsigned int len)
                     pcard->SetCode(code);
                     if(!mainGame->dInfo.isReplay || !mainGame->dInfo.isReplaySkiping) {
 
-                            mainGame->dField.AddCard(pcard, cc, cl, cs);
+                            mainGame->dField.AddCard(cc, cl, cs, pcard);
 
 //                            mainGame->dField.GetCardLocation(pcard, &pcard->curPos, &pcard->curRot);
 //                            pcard->mTransform.setTranslation(pcard->curPos);
@@ -1194,7 +1199,7 @@ int DuelClient::ClientAnalyze(char * msg, unsigned int len)
                             mainGame->dField.FadeCard(pcard, 255, 20);
 //                            mainGame->WaitFrameSignal(20);
                     } else
-                            mainGame->dField.AddCard(pcard, cc, cl, cs);
+                            mainGame->dField.AddCard(cc, cl, cs, pcard);
             } else if (cl == 0) {
                     ClientCard* pcard = mainGame->dField.GetCard(pc, pl, ps);
                     if (code != 0 && pcard->code != code)
@@ -1235,12 +1240,12 @@ int DuelClient::ClientAnalyze(char * msg, unsigned int len)
                             if(mainGame->dInfo.isReplay && mainGame->dInfo.isReplaySkiping) {
                                     mainGame->dField.RemoveCard(pc, pl, ps);
                                     pcard->position = cp;
-                                    mainGame->dField.AddCard(pcard, cc, cl, cs);
+                                    mainGame->dField.AddCard(cc, cl, cs, pcard);
                             } else {
 
                                     mainGame->dField.RemoveCard(pc, pl, ps);
                                     pcard->position = cp;
-                                    mainGame->dField.AddCard(pcard, cc, cl, cs);
+                                    mainGame->dField.AddCard(cc, cl, cs, pcard);
 
                                     if (pl == cl && pc == cc && (cl & 0x71)) {
                                             pcard->dPos = QVector3D(-0.3f, 0, 0);
@@ -1316,7 +1321,7 @@ int DuelClient::ClientAnalyze(char * msg, unsigned int len)
                                     olcard->overlayed.erase(olcard->overlayed.begin() + pcard->sequence);
                                     pcard->overlayTarget = 0;
                                     pcard->position = cp;
-                                    mainGame->dField.AddCard(pcard, cc, cl, cs);
+                                    mainGame->dField.AddCard(cc, cl, cs, pcard);
                                     mainGame->dField.overlay_cards.erase(mainGame->dField.overlay_cards.find(pcard));
                                     for (size_t i = 0; i < (unsigned int)olcard->overlayed.size(); ++i)
                                             olcard->overlayed[i]->sequence = i;
@@ -1325,7 +1330,7 @@ int DuelClient::ClientAnalyze(char * msg, unsigned int len)
                                     olcard->overlayed.erase(olcard->overlayed.begin() + pcard->sequence);
                                     pcard->overlayTarget = 0;
                                     pcard->position = cp;
-                                    mainGame->dField.AddCard(pcard, cc, cl, cs);
+                                    mainGame->dField.AddCard(cc, cl, cs, pcard);
                                     mainGame->dField.overlay_cards.erase(mainGame->dField.overlay_cards.find(pcard));
                                     for (size_t i = 0; i < (unsigned int)olcard->overlayed.size(); ++i) {
                                             olcard->overlayed[i]->sequence = i;
@@ -1419,8 +1424,8 @@ int DuelClient::ClientAnalyze(char * msg, unsigned int len)
 
                     mainGame->dField.RemoveCard(c1, l1, s1);
                     mainGame->dField.RemoveCard(c2, l2, s2);
-                    mainGame->dField.AddCard(pc1, c2, l2, s2);
-                    mainGame->dField.AddCard(pc2, c1, l1, s1);
+                    mainGame->dField.AddCard(c2, l2, s2, pc1);
+                    mainGame->dField.AddCard(c1, l1, s1, pc2);
                     mainGame->dField.MoveCard(pc1, 10);
                     mainGame->dField.MoveCard(pc2, 10);
                     for (size_t i = 0; i < (unsigned int)pc1->overlayed.size(); ++i)
@@ -1432,8 +1437,8 @@ int DuelClient::ClientAnalyze(char * msg, unsigned int len)
             } else {
                     mainGame->dField.RemoveCard(c1, l1, s1);
                     mainGame->dField.RemoveCard(c2, l2, s2);
-                    mainGame->dField.AddCard(pc1, c2, l2, s2);
-                    mainGame->dField.AddCard(pc2, c1, l1, s1);
+                    mainGame->dField.AddCard(c2, l2, s2, pc1);
+                    mainGame->dField.AddCard(c1, l1, s1, pc2);
             }
             return true;
     }
@@ -1684,14 +1689,14 @@ int DuelClient::ClientAnalyze(char * msg, unsigned int len)
                             pcard = mainGame->dField.GetCard(player, LOCATION_DECK, mainGame->dField.deck[player].size() - 1);
                             QMetaObject::invokeMethod(&mainGame->dField.deck[player],"erase",Qt::QueuedConnection, Q_ARG(myIter, mainGame->dField.deck[player].end() - 1));
 //                            mainGame->dField.deck[player].erase(mainGame->dField.deck[player].end() - 1);
-                            mainGame->dField.AddCard(pcard, player, LOCATION_HAND, 0);
+                            mainGame->dField.AddCard(player, LOCATION_HAND, 0, pcard);
                     }
             } else {
                     for (int i = 0; i < count; ++i) {
 
                             pcard = mainGame->dField.GetCard(player, LOCATION_DECK, mainGame->dField.deck[player].size() - 1);
                             QMetaObject::invokeMethod(&mainGame->dField.deck[player],"erase",Qt::QueuedConnection, Q_ARG(myIter, mainGame->dField.deck[player].end() - 1));
-                            mainGame->dField.AddCard(pcard, player, LOCATION_HAND, 0);
+                            mainGame->dField.AddCard(player, LOCATION_HAND, 0, pcard);
                             for(size_t i = 0; i < (unsigned int)mainGame->dField.hand[player].size(); ++i)
                                     mainGame->dField.MoveCard(mainGame->dField.hand[player][i], 10);
 

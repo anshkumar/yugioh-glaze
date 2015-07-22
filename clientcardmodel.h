@@ -54,18 +54,20 @@ public:
     int size() const;
     ClientCard* &last();
     ClientCard* &operator[](int i);
-    ~ClientCardModel();
 
     QList<glaze::ClientCard*>::iterator erase(const myIter);
     QList<glaze::ClientCard*>::iterator erase(const myIter begin, const myIter end);
     void swap(ClientCardModel&);
     void copy(const ClientCardModel &model);
-
-public slots:
-    void dataChangedSignal();
+	void dataChangedSignal();
     void dataChangedSignal(int sequence);
+
+public slots:    
     void push_back(ClientCard* card);
     void clear();
+
+signals:
+//    void pushBackFinished();
 
 protected:
     QHash<int, QByteArray> roleNames() const;
@@ -74,7 +76,6 @@ private:
     QList<ClientCard*> m_list;
 };
 }
-
 Q_DECLARE_METATYPE(glaze::ClientCardModel*)
 
 #endif // CLIENTCARDMODEL_H

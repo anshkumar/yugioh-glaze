@@ -26,7 +26,7 @@ struct ChainInfo{
     bool solved;
 };
 
-class ClientField : public QObject
+class ClientField : public SingleMode
 {
     Q_OBJECT
     Q_PROPERTY(ClientCardModel* deck1 READ deck1 CONSTANT)
@@ -45,6 +45,9 @@ class ClientField : public QObject
     Q_PROPERTY(ClientCardModel* extra2 READ extra2 CONSTANT)
 
 public:
+    ClientField();
+    ~ClientField();
+
     ClientCardModel *deck1();
     ClientCardModel *deck2();
     ClientCardModel *hand1();
@@ -119,11 +122,8 @@ public:
     //chain select window
     bool wShowChainCard;
 
-    explicit ClientField(QObject *parent = 0);
-    void Clear();
     void Initial(int player, int deckc, int extrac);
     ClientCard* GetCard(int controler, int location, int sequence, int sub_seq = 0);
-    void AddCard(ClientCard* pcard, int controler, int location, int sequence);
     ClientCard* RemoveCard(int controler, int location, int sequence);
 
     void ClearCommandFlag();
@@ -178,8 +178,30 @@ public:
     QVector3D vsRScale1;
 
 public slots:
-    void UpdateCard(int controler, int location, int sequence, Buffer buf);
-    void UpdateFieldCard(int controler, int location, Buffer buf);
+    void Clear();
+    ClientCard* AddCard(int controler, int location, int sequence, ClientCard* pcard = 0, ClientCard** newcard = 0);
+    void UpdateCard(int controler, int location, int sequence, char* buf);
+    void UpdateFieldCard(int controler, int location, char* buf);
+    void SinglePlayRefresh(int flag = 0x781fff);
+    void SinglePlayRefreshHand(int player, int flag = 0x781fff);
+    void SinglePlayRefreshGrave(int player, int flag = 0x181fff);
+    void SinglePlayRefreshDeck(int player, int flag = 0x181fff);
+    void SinglePlayRefreshExtra(int player, int flag = 0x181fff);
+    void SinglePlayRefreshSingle(int player, int location, int sequence, int flag = 0x781fff);
+    void SinglePlayReload();
+
+signals:
+    void clearFinished();
+    void addCardFinished();
+    void updateFieldCardFinished();
+    void updateCardFinished();
+    void singlePlayRefreshFinished();
+    void singlePlayRefreshHandFinished();
+    void singlePlayRefreshGraveFinished();
+    void singlePlayRefreshDeckFinished();
+    void singlePlayRefreshExtraFinished();
+    void singlePlayRefreshSingleFinished();
+    void singlePlayReloadFinished();
 
 //    virtual bool OnEvent(const irr::SEvent& event);
 //	void GetHoverField(int x, int y);

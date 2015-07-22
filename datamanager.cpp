@@ -1,5 +1,6 @@
 #include "datamanager.h"
 #include <string.h>
+#include <QDebug>
 
 namespace glaze {
 

@@ -30,6 +30,8 @@ class DuelInfo : public QObject {
     Q_OBJECT
 
 public:
+	explicit DuelInfo(QObject *parent = 0);
+
     bool isStarted;
     bool isReplay;
     bool isReplaySkiping;
@@ -80,6 +82,7 @@ class Game : public QObject
 
 public:
     explicit Game(QObject *parent = 0);
+	~Game();
 
     bool Initialize();
 
@@ -127,6 +130,7 @@ public:
     QThread *workerThread;
     SignalWaiter actionSignal;
     SignalWaiter singleSignal;
+    SignalWaiter invokeMethodSignal;
 
     bool win;
     int showcard;

@@ -1,6 +1,6 @@
 #include <QThread>
 #include <QDebug>
-
+#include <time.h>
 #include "game.h"
 #include "datamanager.h"
 
@@ -9,13 +9,53 @@
 
 namespace glaze{
 
-Game* mainGame;
+Game* mainGame = 0;
+
+DuelInfo::DuelInfo(QObject *parent):
+    QObject(parent)
+{
+    isStarted = false;
+    isReplay = false;
+    isReplaySkiping = false;
+    isFirst = false;
+    isTag = false;
+    isSingleMode = false;
+    is_shuffling = false;
+    tag_player[0] = false;
+    tag_player[1] = false;
+    lp[0] = 0;
+    lp[1] = 0;
+    turn = 0;
+    curMsg = 0;
+    hostname[0] = 0;
+	clientname[0] = 0;
+	hostname_tag[0] = 0;
+	clientname_tag[0] = 0;
+	strTurn[0] = 0;
+    vic_string = 0;
+    player_type  = 0;
+    time_player = 0;
+    time_limit = 0;
+    time_left[0] = 0;
+    time_left[1] = 0;
+}
 
 Game::Game(QObject *parent):
     QObject(parent)
-{}
+{
+    sMode = 0;
+    workerThread = 0;
+}
+
+Game::~Game() {
+    sMode = 0;
+    workerThread = 0;
+    mainGame = 0;
+}
 
 bool Game::Initialize(){
+    srand(time(0));
+//    memset(&dInfo, 0, sizeof(DuelInfo));	//DO NOT uncomment
     if(!dataManager.LoadDB("cards.cdb")) {
         qDebug()<<"Card database initialization FAILED";
             return false;
