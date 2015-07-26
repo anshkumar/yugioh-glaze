@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
 
     view.setSource(QUrl("qrc:/main.qml"));
     view.show();
-    //view.showFullScreen();
+//    view.showFullScreen();
     QObject::connect(view.engine(), SIGNAL(quit()), QGuiApplication::instance(), SLOT(quit()));
     return app.exec();
 }

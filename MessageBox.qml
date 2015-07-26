@@ -8,7 +8,7 @@ BorderImage {
     height: 300
     width: 800
     source: "file:img/menubox.png"
-//    scale: 0.25
+    scale: 0.5
     property string text: ""
     signal clicked;
     border { left: 200; top: 110; right: 200; bottom: 110 }

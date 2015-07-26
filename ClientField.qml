@@ -1,8 +1,8 @@
 import QtQuick 2.0
 
 Item {
-    property real cardWidth: 70
-    property real cardHeight: 102
+    property real cardWidth: 50/*70*/
+    property real cardHeight: 73/*102*/
     property real maxHandWidth: width - 11*cardWidth
     property string charImage1: "file:img/default_avatar_f_0.png"
     property string charImage2: "file:img/default_avatar_m_0.png"
@@ -284,11 +284,11 @@ Item {
                 id: desCardImg
                 anchors {
                     top: parent.top
-                    topMargin: 20
+                    topMargin: -10
                     left: parent.left
-                    leftMargin: 25
+                    leftMargin: 15
                 }
-                scale: 0.9
+                scale: 0.7
             }
             Image {
                 id: desLevelRank
@@ -297,8 +297,8 @@ Item {
                 anchors {
                     left: parent.left
                     leftMargin: 30
-                    top: parent.top
-                    topMargin: 310
+                    top: desCardImg.bottom
+                    topMargin: -10
                 }
                 Text {
                     id: levelRankText
@@ -486,709 +486,737 @@ Item {
         }
     }
 
-    Image {
-        id: extraCardZone1
-        width: cardHeight + 20
-        height: cardHeight + 20
-        source: "file:img/gs_cardslot_player.png"
-        anchors {
-            bottom: parent.bottom
-            bottomMargin: 5
-            left: cardplayerDetailZone.right
-            leftMargin: 10
-        }
-        Image {
-            height: cardHeight
-            fillMode: Image.PreserveAspectFit
-            anchors.centerIn: parent
-            source: "file:img/gs_icon_card_summon.png"
-        }
-        Item {
-            width: cardWidth; height: cardHeight
-            anchors.centerIn: parent
-            ListView {
-                anchors.fill: parent
-                model: clientField.extra1
-                spacing: -cardHeight + 0.5
-                delegate: Image {
-                    width: cardWidth
-                    height: cardHeight
-                    source: "file:img/0000.png"
-                }
-            }
-        }
-    }
-
     Item {
-        id: lscaleCardZone1
-        anchors {
-            bottom: extraCardZone1.top
-            bottomMargin: 5
-            left: extraCardZone1.left
-        }
-        width: cardHeight + 20
-        height: cardHeight + 20
-        Component {
-            id: lscaleCardZoneDelegate1
-            Image {
-                source: {
-                    if(index === 6) {
-                        width = cardHeight + 20;
-                        height = cardHeight + 20;
-                        return "file:img/gs_cardslot_player.png";
-                    }
-                    else
-                        return "";
-                }
-                    ClientCard {
-                        width: cardWidth; height: cardHeight;
-                        anchors.centerIn: parent
-                        isEnableDown: false
-                        front: Image {
-                            width: cardWidth; height: cardHeight;
-                            anchors.centerIn: parent
-                            source : {
-                                if(index == 6 && code != 0)
-                                    return "file:pics/"+ code +".jpg";
-                            }
-                        }
-                    }
-
-            }
-        }
-        ListView {
-            delegate:lscaleCardZoneDelegate1
-            focus: true
-            interactive: false
-            model: clientField.szone1
-        }
-    }
-
-    Item {
-        id: fieldCardZone1
-        anchors {
-            bottom: lscaleCardZone1.top
-            bottomMargin: 5
-            left: lscaleCardZone1.left
-        }
-        width: cardHeight + 20
-        height: cardHeight + 20
-        Component {
-            id: fieldCardZoneDelegate1
-            Image {
-                source: {
-                    if(index === 5) {
-                        width = cardHeight + 20;
-                        height = cardHeight + 20;
-                        return "file:img/gs_cardslot_player.png";
-                    }
-                    else
-                        return "";
-                }
-                Image {
-                    height: cardHeight
-                    fillMode: Image.PreserveAspectFit
-                    anchors.centerIn: parent
-                    source: (index === 5)?"file:img/gs_icon_card_spell.png":""
-                    ClientCard {
-                        width: cardWidth; height: cardHeight;
-                        anchors.centerIn: parent
-                        isEnableDown: false
-                        front: Image {
-                            width: cardWidth; height: cardHeight;
-                            anchors.centerIn: parent
-                            source : {
-                                if(index === 5 && code != 0)
-                                    return "file:pics/"+ code +".jpg";
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        ListView {
-            delegate:fieldCardZoneDelegate1
-            focus: true
-            interactive: false
-            model: clientField.szone1
-        }
-    }
-
-    Item {
-        id: spellZone1
-        width: (cardHeight+20)*5 + 4*5
-        height: cardHeight+20
-        anchors {
-            left: lscaleCardZone1.right
-            leftMargin: 5
-            top: lscaleCardZone1.top
-        }
-        Component {
-            id: spellZoneDelegate1
-            Image {
-                width: cardHeight + 20
-                height: cardHeight + 20
-                source: "file:img/gs_cardslot_player.png"
-                ClientCard {
-                    isEnableDown: false
-                    width: cardWidth; height: cardHeight
-                    anchors.centerIn: parent
-                    front: Image {
-                        width: cardWidth; height: cardHeight;
-                        source: /*(code != 0)?*/"file:pics/"+ code +".jpg"/*:""*/
-                        anchors.centerIn: parent
-                    }
-                    flipped: (position & pos_facedown)? true: false;
-                    Image {
-                        id: spellZoneEquipImg1
-                        fillMode: Image.PreserveAspectFit
-                        anchors.fill: parent
-                    }
-                }
-            }
-        }
-
-        ListView {
-            anchors.fill: parent
-            delegate: spellZoneDelegate1
-            orientation: Qt.Horizontal
-            focus: true
-            interactive: false
-            spacing: 5
-            model: clientField.szone1
-        }
-    }
-
-    Item {
-        id: rscaleCardZone1
-        anchors {
-            top: spellZone1.top
-            left: spellZone1.right
-        }
-        width: cardHeight + 20
-        height: cardHeight + 20
-        Component {
-            id: rscaleCardZoneDelegate1
-            Image {
-                source: {
-                    if(index === 7) {
-                        width = cardHeight + 20;
-                        height = cardHeight + 20;
-                        return "file:img/gs_cardslot_player.png";
-                    }
-                    else
-                        return "";
-                }
-                    ClientCard {
-                        width: cardWidth; height: cardHeight;
-                        anchors.centerIn: parent
-                        isEnableDown: false
-                        front: Image {
-                            width: cardWidth; height: cardHeight;
-                            anchors.centerIn: parent
-                            source : {
-                                if(index === 7 && code != 0)
-                                    return "file:pics/"+ code +".jpg";
-                            }
-                        }
-                    }
-
-            }
-        }
-        ListView {
-            delegate:rscaleCardZoneDelegate1
-            focus: true
-            interactive: false
-            model: clientField.szone1
-        }
-    }
-
-    Item {
-        id: monsterZone1
-        width: (cardHeight+20)*5 + 4*5
-        height: cardHeight+20
-        anchors {
-            left: fieldCardZone1.right
-            leftMargin: 5
-            top: fieldCardZone1.top
-        }
-        Component {
-            id: monsterZoneDelegate1
-            Image {
-                width: cardHeight + 20
-                height: cardHeight + 20
-                source: "file:img/gs_cardslot_player.png"
-                ClientCard {
-                    isEnableDown: false
-                    width: cardWidth; height: cardHeight
-                    anchors.centerIn: parent
-                    front: Image {
-                        width: cardWidth; height: cardHeight;
-                        source: /*(code != 0)?*/"file:pics/"+ code +".jpg"/*:""*/
-                        anchors.centerIn: parent
-                    }
-                    rotation: (position & pos_defence)? 90: 0;
-                    flipped: (position & pos_facedown)? true: false;
-                    Image {
-                        id: monsterZoneEquipImg1
-                        fillMode: Image.PreserveAspectFit
-                        anchors.fill: parent
-                    }
-                }
-            }
-        }
-
-        ListView {
-            anchors.fill: parent
-            delegate: monsterZoneDelegate1
-            orientation: Qt.Horizontal
-            focus: true
-            interactive: false
-            spacing: 5
-            model: clientField.mzone1
-        }
-    }
-
-    Image {
-        id: graveyardCardZone1
-        width: cardHeight + 20
-        height: cardHeight + 20
-        anchors {
-            top: monsterZone1.top
-            left: monsterZone1.right
-        }
-        source: "file:img/gs_cardslot_player.png"
-        Image {
-            height: cardHeight
-            fillMode: Image.PreserveAspectFit
-            anchors.centerIn: parent
-            source: "file:img/gs_icon_card_graveyard.png"
-        }
-        ClientCard {
-            width: cardWidth; height: cardHeight;
-            anchors.centerIn: parent
-            isEnableDown: false
-            front: Image {
-                width: cardWidth; height: cardHeight;
-                anchors.centerIn: parent
-            }
-        }
-    }
-
-    Image {
-        id: deckCardZone1
-        width: cardHeight + 20
-        height: cardHeight + 20
-        source: "file:img/gs_cardslot_player.png"
-        anchors {
-            bottom: parent.bottom
-            bottomMargin: 5
-            left: graveyardCardZone1.left
-        }
-        Item {
-            width: cardWidth; height: cardHeight
-            anchors.centerIn: parent
-            ListView {
-                anchors.fill: parent
-                model: clientField.deck1
-                spacing: -cardHeight + 0.5
-                delegate: Image {
-                    width: cardWidth
-                    height: cardHeight
-                    source: "file:img/0000.png"
-                }
-            }
-        }
-    }
-
-    Image {
-        id: deckCardZone2
-        width: cardHeight + 20
-        height: cardHeight + 20
-        source: "file:img/gs_cardslot_opponent.png"
+        id: duelField
         anchors {
             top: parent.top
-            topMargin: 5
+            bottom: parent.bottom
+            right: parent.right
             left: cardplayerDetailZone.right
-            leftMargin: 10
+            leftMargin: 20
         }
-        Item {
-            width: cardWidth; height: cardHeight
-            anchors.centerIn: parent
-            ListView {
-                anchors.fill: parent
-                model: clientField.deck2
-                spacing: -cardHeight + 0.5
-                delegate: Image {
-                    width: cardWidth
-                    height: cardHeight
-                    source: "file:img/0000.png"
+
+        Image {
+            id: extraCardZone1
+            width: cardHeight + 20
+            height: cardHeight + 20
+            source: "file:img/gs_cardslot_player.png"
+            anchors {
+                bottom: parent.bottom
+                bottomMargin: 5
+                left: duelField.left
+            }
+            Image {
+                height: cardHeight
+                fillMode: Image.PreserveAspectFit
+                anchors.centerIn: parent
+                source: "file:img/gs_icon_card_summon.png"
+            }
+            Item {
+                width: cardWidth; height: cardHeight
+                anchors.centerIn: parent
+                ListView {
+                    anchors.fill: parent
+                    model: clientField.extra1
+                    spacing: -cardHeight + 0.5
+                    delegate: Image {
+                        width: cardWidth
+                        height: cardHeight
+                        source: "file:img/0000.png"
+                    }
                 }
             }
         }
-    }
 
-    Item {
-        id: rscaleCardZone2
-        anchors {
-            top: deckCardZone2.bottom
-            topMargin: 5
-            left: deckCardZone2.left
-        }
-        width: cardHeight + 20
-        height: cardHeight + 20
-        Component {
-            id: rscaleCardZoneDelegate2
-            Image {
-                source: {
-                    if(index === 7) {
-                        width = cardHeight + 20;
-                        height = cardHeight + 20;
-                        return "file:img/gs_cardslot_opponent.png";
+        Item {
+            id: lscaleCardZone1
+            anchors {
+                bottom: extraCardZone1.top
+                bottomMargin: 5
+                left: extraCardZone1.left
+            }
+            width: cardHeight + 20
+            height: cardHeight + 20
+            Component {
+                id: lscaleCardZoneDelegate1
+                Image {
+                    source: {
+                        if(index === 6) {
+                            width = cardHeight + 20;
+                            height = cardHeight + 20;
+                            return "file:img/gs_cardslot_player.png";
+                        }
+                        else
+                            return "";
                     }
-                    else
-                        return "";
-                }
-                    ClientCard {
-                        width: cardWidth; height: cardHeight;
-                        anchors.centerIn: parent
-                        isEnableDown: false
-                        front: Image {
+                        ClientCard {
                             width: cardWidth; height: cardHeight;
                             anchors.centerIn: parent
-                            source : {
-                                if(index === 7 && code != 0)
-                                    return "file:pics/"+ code +".jpg";
+                            isEnableDown: false
+                            front: Image {
+                                width: cardWidth; height: cardHeight;
+                                anchors.centerIn: parent
+                                source : {
+                                    if(index == 6 && code != 0)
+                                        return "file:pics/"+ code +".jpg";
+                                    return "";
+                                }
                             }
                         }
-                        rotation: 180
-                    }
 
+                }
+            }
+            ListView {
+                delegate:lscaleCardZoneDelegate1
+                focus: true
+                interactive: false
+                model: clientField.szone1
             }
         }
-        ListView {
-            delegate:rscaleCardZoneDelegate2
-            focus: true
-            interactive: false
-            model: clientField.szone2
-        }
-    }
 
-    Image {
-        id: graveyardCardZone2
-        width: cardHeight + 20
-        height: cardHeight + 20
-        anchors {
-            top: rscaleCardZone2.bottom
-            topMargin: 5
-            left: rscaleCardZone2.left
+        Item {
+            id: fieldCardZone1
+            anchors {
+                bottom: lscaleCardZone1.top
+                bottomMargin: 5
+                left: lscaleCardZone1.left
+            }
+            width: cardHeight + 20
+            height: cardHeight + 20
+            Component {
+                id: fieldCardZoneDelegate1
+                Image {
+                    source: {
+                        if(index === 5) {
+                            width = cardHeight + 20;
+                            height = cardHeight + 20;
+                            return "file:img/gs_cardslot_player.png";
+                        }
+                        else
+                            return "";
+                    }
+                    Image {
+                        height: cardHeight
+                        fillMode: Image.PreserveAspectFit
+                        anchors.centerIn: parent
+                        source: (index === 5)?"file:img/gs_icon_card_spell.png":""
+                        ClientCard {
+                            width: cardWidth; height: cardHeight;
+                            anchors.centerIn: parent
+                            isEnableDown: false
+                            front: Image {
+                                width: cardWidth; height: cardHeight;
+                                anchors.centerIn: parent
+                                source : {
+                                    if(index === 5 && code != 0)
+                                        return "file:pics/"+ code +".jpg";
+                                    return "";
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            ListView {
+                delegate:fieldCardZoneDelegate1
+                focus: true
+                interactive: false
+                model: clientField.szone1
+            }
         }
 
-        source: "file:img/gs_cardslot_opponent.png"
+        Item {
+            id: spellZone1
+            width: (cardHeight+20)*5 + 4*5
+            height: cardHeight+20
+            anchors {
+//                left: lscaleCardZone1.right
+//                leftMargin: 5
+                horizontalCenter: duelField.horizontalCenter
+//                horizontalCenterOffset: 70
+                top: lscaleCardZone1.top
+            }
+            Component {
+                id: spellZoneDelegate1
+                Image {
+                    width: cardHeight + 20
+                    height: cardHeight + 20
+                    source: "file:img/gs_cardslot_player.png"
+                    ClientCard {
+                        isEnableDown: false
+                        width: cardWidth; height: cardHeight
+                        anchors.centerIn: parent
+                        front: Image {
+                            width: cardWidth; height: cardHeight;
+                            source: (code != 0)?"file:pics/"+ code +".jpg":""
+                            anchors.centerIn: parent
+                        }
+                        flipped: (position & pos_facedown)? true: false;
+                        Image {
+                            id: spellZoneEquipImg1
+                            fillMode: Image.PreserveAspectFit
+                            anchors.fill: parent
+                        }
+                    }
+                }
+            }
+
+            ListView {
+                anchors.fill: parent
+                delegate: spellZoneDelegate1
+                orientation: Qt.Horizontal
+                focus: true
+                interactive: false
+                spacing: 5
+                model: clientField.szone1
+            }
+        }
+
+        Item {
+            id: rscaleCardZone1
+            anchors {
+                top: spellZone1.top
+                right: duelField.right
+//                left: spellZone1.right
+            }
+            width: cardHeight + 20
+            height: cardHeight + 20
+            Component {
+                id: rscaleCardZoneDelegate1
+                Image {
+                    source: {
+                        if(index === 7) {
+                            width = cardHeight + 20;
+                            height = cardHeight + 20;
+                            return "file:img/gs_cardslot_player.png";
+                        }
+                        else
+                            return "";
+                    }
+                        ClientCard {
+                            width: cardWidth; height: cardHeight;
+                            anchors.centerIn: parent
+                            isEnableDown: false
+                            front: Image {
+                                width: cardWidth; height: cardHeight;
+                                anchors.centerIn: parent
+                                source : {
+                                    if(index === 7 && code != 0)
+                                        return "file:pics/"+ code +".jpg";
+                                    return "";
+                                }
+                            }
+                        }
+
+                }
+            }
+            ListView {
+                delegate:rscaleCardZoneDelegate1
+                focus: true
+                interactive: false
+                model: clientField.szone1
+            }
+        }
+
+        Item {
+            id: monsterZone1
+            width: (cardHeight+20)*5 + 4*5
+            height: cardHeight+20
+            anchors {
+                horizontalCenter: duelField.horizontalCenter
+//                horizontalCenterOffset: 70
+//                left: fieldCardZone1.right
+//                leftMargin: 5
+                top: fieldCardZone1.top
+            }
+            Component {
+                id: monsterZoneDelegate1
+                Image {
+                    width: cardHeight + 20
+                    height: cardHeight + 20
+                    source: "file:img/gs_cardslot_player.png"
+                    ClientCard {
+                        isEnableDown: false
+                        width: cardWidth; height: cardHeight
+                        anchors.centerIn: parent
+                        front: Image {
+                            width: cardWidth; height: cardHeight;
+                            source: (code != 0)?"file:pics/"+ code +".jpg":""
+                            anchors.centerIn: parent
+                        }
+                        rotation: (position & pos_defence)? 90: 0;
+                        flipped: (position & pos_facedown)? true: false;
+                        Image {
+                            id: monsterZoneEquipImg1
+                            fillMode: Image.PreserveAspectFit
+                            anchors.fill: parent
+                        }
+                    }
+                }
+            }
+
+            ListView {
+                anchors.fill: parent
+                delegate: monsterZoneDelegate1
+                orientation: Qt.Horizontal
+                focus: true
+                interactive: false
+                spacing: 5
+                model: clientField.mzone1
+            }
+        }
+
         Image {
-            height: cardHeight
-            fillMode: Image.PreserveAspectFit
-            anchors.centerIn: parent
-            source: "file:img/gs_icon_card_graveyard.png"
-        }
-        ClientCard {
-            width: cardWidth; height: cardHeight;
-            anchors.centerIn: parent
-            isEnableDown: false
-            front: Image {
+            id: graveyardCardZone1
+            width: cardHeight + 20
+            height: cardHeight + 20
+            anchors {
+                top: monsterZone1.top
+                right: rscaleCardZone1.right
+//                left: monsterZone1.right
+            }
+            source: "file:img/gs_cardslot_player.png"
+            Image {
+                height: cardHeight
+                fillMode: Image.PreserveAspectFit
+                anchors.centerIn: parent
+                source: "file:img/gs_icon_card_graveyard.png"
+            }
+            ClientCard {
                 width: cardWidth; height: cardHeight;
                 anchors.centerIn: parent
-            }
-            rotation: 180
-        }
-    }
-
-    Item {
-        id: spellZone2
-        width: (cardHeight+20)*5 + 4*5
-        height: cardHeight+20
-        anchors {
-            left: rscaleCardZone2.right
-            leftMargin: 5
-            top: rscaleCardZone2.top
-        }
-        Component {
-            id: spellZoneDelegate2
-            Image {
-                width: cardHeight + 20
-                height: cardHeight + 20
-                source: "file:img/gs_cardslot_opponent.png"
-                ClientCard {
-                    isEnableDown: false
-                    width: cardWidth; height: cardHeight
+                isEnableDown: false
+                front: Image {
+                    width: cardWidth; height: cardHeight;
                     anchors.centerIn: parent
-                    front: Image {
-                        width: cardWidth; height: cardHeight;
-                        source: /*(code != 0)?*/"file:pics/"+ code +".jpg"/*:""*/
-                        anchors.centerIn: parent
-                    }
-                    flipped: (position & pos_facedown)? true: false;
-                    Image {
-                        id: spellZoneEquipImg2
-                        fillMode: Image.PreserveAspectFit
-                        anchors.fill: parent
-                    }
                 }
             }
         }
 
-        ListView {
-            anchors.fill: parent
-            delegate: spellZoneDelegate2
-            orientation: Qt.Horizontal
-            focus: true
-            interactive: false
-            spacing: 5
-            model: clientField.szone2
-            layoutDirection: Qt.RightToLeft
-        }
-    }
-
-    Item {
-        id: lscaleCardZone2
-        anchors {
-            top: spellZone2.top
-            left: spellZone2.right
-        }
-        width: cardHeight + 20
-        height: cardHeight + 20
-        Component {
-            id: lscaleCardZoneDelegate2
-            Image {
-                source: {
-                    if(index === 6) {
-                        width = cardHeight + 20;
-                        height = cardHeight + 20;
-                        return "file:img/gs_cardslot_opponent.png";
-                    }
-                    else
-                        return "";
-                }
-                    ClientCard {
-                        width: cardWidth; height: cardHeight;
-                        anchors.centerIn: parent
-                        isEnableDown: false
-                        front: Image {
-                            width: cardWidth; height: cardHeight;
-                            anchors.centerIn: parent
-                            source : {
-                                if(index === 6 && code != 0)
-                                    return "file:pics/"+ code +".jpg";
-                            }
-                        }
-                        rotation: 180
-                    }
-
-            }
-        }
-        ListView {
-            delegate:lscaleCardZoneDelegate2
-            focus: true
-            interactive: false
-            model: clientField.szone2
-        }
-    }
-
-    Item {
-        id: monsterZone2
-        width: (cardHeight+20)*5 + 4*5
-        height: cardHeight+20
-        anchors {
-            left: graveyardCardZone2.right
-            leftMargin: 5
-            top: graveyardCardZone2.top
-        }
-        Component {
-            id: monsterZoneDelegate2
-            Image {
-                width: cardHeight + 20
-                height: cardHeight + 20
-                source: "file:img/gs_cardslot_opponent.png"
-                ClientCard {
-                    isEnableDown: false
-                    width: cardWidth; height: cardHeight
-                    anchors.centerIn: parent
-                    front: Image {
-                        width: cardWidth; height: cardHeight;
-                        source: /*(code != 0)?*/"file:pics/"+ code +".jpg"/*:""*/
-                        anchors.centerIn: parent
-                    }
-                    rotation: (position & pos_defence)? 90: 180;
-                    flipped: (position & pos_facedown)? true: false;
-                    Image {
-                        id: monsterZoneEquipImg2
-                        fillMode: Image.PreserveAspectFit
-                        anchors.fill: parent
-                    }
-                }
-            }
-        }
-
-        ListView {
-            anchors.fill: parent
-            delegate: monsterZoneDelegate2
-            orientation: Qt.Horizontal
-            focus: true
-            interactive: false
-            spacing: 5
-            model: clientField.mzone2
-            layoutDirection: Qt.RightToLeft
-        }
-    }
-
-    Item {
-        id: fieldCardZone2
-        anchors {
-            top: monsterZone2.top
-            left: monsterZone2.right
-        }
-        width: cardHeight + 20
-        height: cardHeight + 20
-        Component {
-            id: fieldCardZoneDelegate2
-            Image {
-                source: {
-                    if(index === 5) {
-                        width = cardHeight + 20;
-                        height = cardHeight + 20;
-                        return "file:img/gs_cardslot_opponent.png";
-                    }
-                    else
-                        return "";
-                }
-                Image {
-                    height: cardHeight
-                    fillMode: Image.PreserveAspectFit
-                    anchors.centerIn: parent
-                    source: (index === 5)?"file:img/gs_icon_card_spell.png":""
-                    ClientCard {
-                        width: cardWidth; height: cardHeight;
-                        anchors.centerIn: parent
-                        isEnableDown: false
-                        front: Image {
-                            width: cardWidth; height: cardHeight;
-                            anchors.centerIn: parent
-                            source : {
-                                if(index === 5 && code != 0)
-                                    return "file:pics/"+ code +".jpg";
-                            }
-                        }
-                        rotation: 180
-                    }
-                }
-            }
-        }
-        ListView {
-            delegate:fieldCardZoneDelegate2
-            focus: true
-            interactive: false
-            model: clientField.szone2
-        }
-    }
-
-    Image {
-        id: extraCardZone2
-        width: cardHeight + 20
-        height: cardHeight + 20
-        source: "file:img/gs_cardslot_opponent.png"
-        anchors {
-            top: parent.top
-            topMargin: 5
-            left: lscaleCardZone2.left
-        }
         Image {
-            height: cardHeight
-            fillMode: Image.PreserveAspectFit
-            anchors.centerIn: parent
-            source: "file:img/gs_icon_card_summon.png"
-            rotation: 180
+            id: deckCardZone1
+            width: cardHeight + 20
+            height: cardHeight + 20
+            source: "file:img/gs_cardslot_player.png"
+            anchors {
+                bottom: parent.bottom
+                bottomMargin: 5
+                left: graveyardCardZone1.left
+            }
+            Item {
+                width: cardWidth; height: cardHeight
+                anchors.centerIn: parent
+                ListView {
+                    anchors.fill: parent
+                    model: clientField.deck1
+                    spacing: -cardHeight + 0.5
+                    delegate: Image {
+                        width: cardWidth
+                        height: cardHeight
+                        source: "file:img/0000.png"
+                    }
+                }
+            }
         }
+
+        Image {
+            id: deckCardZone2
+            width: cardHeight + 20
+            height: cardHeight + 20
+            source: "file:img/gs_cardslot_opponent.png"
+            anchors {
+                top: parent.top
+                topMargin: 5
+                left: duelField.left
+            }
+            Item {
+                width: cardWidth; height: cardHeight
+                anchors.centerIn: parent
+                ListView {
+                    anchors.fill: parent
+                    model: clientField.deck2
+                    spacing: -cardHeight + 0.5
+                    delegate: Image {
+                        width: cardWidth
+                        height: cardHeight
+                        source: "file:img/0000.png"
+                    }
+                }
+            }
+        }
+
         Item {
-            width: cardWidth; height: cardHeight
-            anchors.centerIn: parent
+            id: rscaleCardZone2
+            anchors {
+                top: deckCardZone2.bottom
+                topMargin: 5
+                left: deckCardZone2.left
+            }
+            width: cardHeight + 20
+            height: cardHeight + 20
+            Component {
+                id: rscaleCardZoneDelegate2
+                Image {
+                    source: {
+                        if(index === 7) {
+                            width = cardHeight + 20;
+                            height = cardHeight + 20;
+                            return "file:img/gs_cardslot_opponent.png";
+                        }
+                        else
+                            return "";
+                    }
+                        ClientCard {
+                            width: cardWidth; height: cardHeight;
+                            anchors.centerIn: parent
+                            isEnableDown: false
+                            front: Image {
+                                width: cardWidth; height: cardHeight;
+                                anchors.centerIn: parent
+                                source : {
+                                    if(index === 7 && code != 0)
+                                        return "file:pics/"+ code +".jpg";
+                                    return "";
+                                }
+                            }
+                            rotation: 180
+                        }
+
+                }
+            }
+            ListView {
+                delegate:rscaleCardZoneDelegate2
+                focus: true
+                interactive: false
+                model: clientField.szone2
+            }
+        }
+
+        Image {
+            id: graveyardCardZone2
+            width: cardHeight + 20
+            height: cardHeight + 20
+            anchors {
+                top: rscaleCardZone2.bottom
+                topMargin: 5
+                left: rscaleCardZone2.left
+            }
+
+            source: "file:img/gs_cardslot_opponent.png"
+            Image {
+                height: cardHeight
+                fillMode: Image.PreserveAspectFit
+                anchors.centerIn: parent
+                source: "file:img/gs_icon_card_graveyard.png"
+            }
+            ClientCard {
+                width: cardWidth; height: cardHeight;
+                anchors.centerIn: parent
+                isEnableDown: false
+                front: Image {
+                    width: cardWidth; height: cardHeight;
+                    anchors.centerIn: parent
+                }
+                rotation: 180
+            }
+        }
+
+        Item {
+            id: spellZone2
+            width: (cardHeight+20)*5 + 4*5
+            height: cardHeight+20
+            anchors {
+                horizontalCenter: duelField.horizontalCenter
+//                horizontalCenterOffset: 70
+//                left: rscaleCardZone2.right
+//                leftMargin: 5
+                top: rscaleCardZone2.top
+            }
+            Component {
+                id: spellZoneDelegate2
+                Image {
+                    width: cardHeight + 20
+                    height: cardHeight + 20
+                    source: "file:img/gs_cardslot_opponent.png"
+                    ClientCard {
+                        isEnableDown: false
+                        width: cardWidth; height: cardHeight
+                        anchors.centerIn: parent
+                        front: Image {
+                            width: cardWidth; height: cardHeight;
+                            source: (code != 0)?"file:pics/"+ code +".jpg":""
+                            anchors.centerIn: parent
+                        }
+                        flipped: (position & pos_facedown)? true: false;
+                        Image {
+                            id: spellZoneEquipImg2
+                            fillMode: Image.PreserveAspectFit
+                            anchors.fill: parent
+                        }
+                    }
+                }
+            }
+
             ListView {
                 anchors.fill: parent
-                model: clientField.extra2
-                spacing: -cardHeight + 0.5
-                delegate: Image {
-                    width: cardWidth
-                    height: cardHeight
-                    source: "file:img/0000.png"
-                }
+                delegate: spellZoneDelegate2
+                orientation: Qt.Horizontal
+                focus: true
+                interactive: false
+                spacing: 5
+                model: clientField.szone2
+                layoutDirection: Qt.RightToLeft
             }
         }
-    }
 
-    Item {
-        height: cardHeight
-        width: (cardWidth * hand1List.count > maxHandWidth)? maxHandWidth: cardWidth * hand1List.count
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: 4
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.horizontalCenterOffset: 70
+        Item {
+            id: lscaleCardZone2
+            anchors {
+                top: spellZone2.top
+                right: duelField.right
+//                left: spellZone2.right
+            }
+            width: cardHeight + 20
+            height: cardHeight + 20
+            Component {
+                id: lscaleCardZoneDelegate2
+                Image {
+                    source: {
+                        if(index === 6) {
+                            width = cardHeight + 20;
+                            height = cardHeight + 20;
+                            return "file:img/gs_cardslot_opponent.png";
+                        }
+                        else
+                            return "";
+                    }
+                        ClientCard {
+                            width: cardWidth; height: cardHeight;
+                            anchors.centerIn: parent
+                            isEnableDown: false
+                            front: Image {
+                                width: cardWidth; height: cardHeight;
+                                anchors.centerIn: parent
+                                source : {
+                                    if(index === 6 && code != 0)
+                                        return "file:pics/"+ code +".jpg";
+                                    return "";
+                                }
+                            }
+                            rotation: 180
+                        }
 
-        Component {
-            id: hand1Delegate
-            ClientCard {
-                isEnableDown: true
+                }
+            }
+            ListView {
+                delegate:lscaleCardZoneDelegate2
+                focus: true
+                interactive: false
+                model: clientField.szone2
+            }
+        }
+
+        Item {
+            id: monsterZone2
+            width: (cardHeight+20)*5 + 4*5
+            height: cardHeight+20
+            anchors {
+                horizontalCenter: duelField.horizontalCenter
+//                horizontalCenterOffset: 70
+//                left: graveyardCardZone2.right
+//                leftMargin: 5
+                top: graveyardCardZone2.top
+            }
+            Component {
+                id: monsterZoneDelegate2
+                Image {
+                    width: cardHeight + 20
+                    height: cardHeight + 20
+                    source: "file:img/gs_cardslot_opponent.png"
+                    ClientCard {
+                        isEnableDown: false
+                        width: cardWidth; height: cardHeight
+                        anchors.centerIn: parent
+                        front: Image {
+                            width: cardWidth; height: cardHeight;
+                            source: (code != 0)?"file:pics/"+ code +".jpg":""
+                            anchors.centerIn: parent
+                        }
+                        rotation: (position & pos_defence)? 90: 180;
+                        flipped: (position & pos_facedown)? true: false;
+                        Image {
+                            id: monsterZoneEquipImg2
+                            fillMode: Image.PreserveAspectFit
+                            anchors.fill: parent
+                        }
+                    }
+                }
+            }
+
+            ListView {
+                anchors.fill: parent
+                delegate: monsterZoneDelegate2
+                orientation: Qt.Horizontal
+                focus: true
+                interactive: false
+                spacing: 5
+                model: clientField.mzone2
+                layoutDirection: Qt.RightToLeft
+            }
+        }
+
+        Item {
+            id: fieldCardZone2
+            anchors {
+                top: monsterZone2.top
+                right: lscaleCardZone2.right
+//                left: monsterZone2.right
+            }
+            width: cardHeight + 20
+            height: cardHeight + 20
+            Component {
+                id: fieldCardZoneDelegate2
+                Image {
+                    source: {
+                        if(index === 5) {
+                            width = cardHeight + 20;
+                            height = cardHeight + 20;
+                            return "file:img/gs_cardslot_opponent.png";
+                        }
+                        else
+                            return "";
+                    }
+                    Image {
+                        height: cardHeight
+                        fillMode: Image.PreserveAspectFit
+                        anchors.centerIn: parent
+                        source: (index === 5)?"file:img/gs_icon_card_spell.png":""
+                        ClientCard {
+                            width: cardWidth; height: cardHeight;
+                            anchors.centerIn: parent
+                            isEnableDown: false
+                            front: Image {
+                                width: cardWidth; height: cardHeight;
+                                anchors.centerIn: parent
+                                source : {
+                                    if(index === 5 && code != 0)
+                                        return "file:pics/"+ code +".jpg";
+                                    return "";
+                                }
+                            }
+                            rotation: 180
+                        }
+                    }
+                }
+            }
+            ListView {
+                delegate:fieldCardZoneDelegate2
+                focus: true
+                interactive: false
+                model: clientField.szone2
+            }
+        }
+
+        Image {
+            id: extraCardZone2
+            width: cardHeight + 20
+            height: cardHeight + 20
+            source: "file:img/gs_cardslot_opponent.png"
+            anchors {
+                top: parent.top
+                topMargin: 5
+                right: lscaleCardZone2.right
+//                left: lscaleCardZone2.left
+            }
+            Image {
+                height: cardHeight
+                fillMode: Image.PreserveAspectFit
+                anchors.centerIn: parent
+                source: "file:img/gs_icon_card_summon.png"
+                rotation: 180
+            }
+            Item {
                 width: cardWidth; height: cardHeight
-                front: Image {
-                    id: clientCardImg1
-                    width: cardWidth; height: cardHeight;
-                    source: /*(code != 0)?*/"file:pics/"+ code +".jpg"/*:parent.flipped=true*/; //Will issue warning
-                    anchors.centerIn: parent
+                anchors.centerIn: parent
+                ListView {
+                    anchors.fill: parent
+                    model: clientField.extra2
+                    spacing: -cardHeight + 0.5
+                    delegate: Image {
+                        width: cardWidth
+                        height: cardHeight
+                        source: "file:img/0000.png"
+                    }
                 }
             }
         }
 
-        ListView {
-            id: hand1List
-            anchors.fill: parent
-            delegate: hand1Delegate
-            orientation: Qt.Horizontal
-            focus: true
-            interactive: false
-            model: clientField.hand1
-            spacing: (cardWidth * hand1List.count > maxHandWidth)? -(cardWidth * hand1List.count - maxHandWidth)/(hand1List.count - 1): 2
-        }
-    }
+        Item {
+            height: cardHeight
+            width: (cardWidth * hand1List.count > maxHandWidth)? maxHandWidth: cardWidth * hand1List.count
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 4
+            anchors.horizontalCenter: parent.horizontalCenter
+//            anchors.horizontalCenterOffset: 70
 
-    Item {
-        height: cardHeight
-        width: (cardWidth * hand2List.count > maxHandWidth)? maxHandWidth: cardWidth * hand2List.count
-        anchors.top: parent.top
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.horizontalCenterOffset: 70
-
-        Component {
-            id: hand2Delegate
-            ClientCard {
-                isEnableDown: true
-                downYBehaviour: true
-                width: cardWidth; height: cardHeight
-                front: Image {
-                    id: clientCardImg2
-                    width: cardWidth; height: cardHeight;
-                    source: /*(code != 0)?*/"file:pics/"+ code +".jpg"/*:parent.flipped=true*/; //Will issue warning
-                    anchors.centerIn: parent
+            Component {
+                id: hand1Delegate
+                ClientCard {
+                    isEnableDown: true
+                    width: cardWidth; height: cardHeight
+                    front: Image {
+                        id: clientCardImg1
+                        width: cardWidth; height: cardHeight;
+                        source: (code != 0)?"file:pics/"+ code +".jpg":""/*:parent.flipped=true*/; //Will issue warning
+                        anchors.centerIn: parent
+                    }
                 }
+            }
+
+            ListView {
+                id: hand1List
+                anchors.fill: parent
+                delegate: hand1Delegate
+                orientation: Qt.Horizontal
+                focus: true
+                interactive: false
+                model: clientField.hand1
+                spacing: (cardWidth * hand1List.count > maxHandWidth)? -(cardWidth * hand1List.count - maxHandWidth)/(hand1List.count - 1): 2
             }
         }
 
-        ListView {
-            id: hand2List
-            anchors.fill: parent
-            delegate: hand2Delegate
-            orientation: Qt.Horizontal
-            focus: true
-            interactive: false
-            model: clientField.hand2
-            spacing: (cardWidth * hand2List.count > maxHandWidth)? -(cardWidth * hand2List.count - maxHandWidth)/(hand2List.count - 1): 2
+        Item {
+            height: cardHeight
+            width: (cardWidth * hand2List.count > maxHandWidth)? maxHandWidth: cardWidth * hand2List.count
+            anchors.top: parent.top
+            anchors.horizontalCenter: parent.horizontalCenter
+//            anchors.horizontalCenterOffset: 70
+
+            Component {
+                id: hand2Delegate
+                ClientCard {
+                    isEnableDown: true
+                    downYBehaviour: true
+                    width: cardWidth; height: cardHeight
+                    front: Image {
+                        id: clientCardImg2
+                        width: cardWidth; height: cardHeight;
+                        source: (code != 0)?"file:pics/"+ code +".jpg":""/*:parent.flipped=true*/; //Will issue warning
+                        anchors.centerIn: parent
+                    }
+                }
+            }
+
+            ListView {
+                id: hand2List
+                anchors.fill: parent
+                delegate: hand2Delegate
+                orientation: Qt.Horizontal
+                focus: true
+                interactive: false
+                model: clientField.hand2
+                spacing: (cardWidth * hand2List.count > maxHandWidth)? -(cardWidth * hand2List.count - maxHandWidth)/(hand2List.count - 1): 2
+            }
         }
     }
 
