@@ -1,8 +1,14 @@
 import QtQuick 2.0
 
 Item {
-    property real cardWidth: 50/*70*/
-    property real cardHeight: 73/*102*/
+    property real cardWidth: 50
+    property real cardHeight: 73
+    property real detailWidth: 300
+    property real desImgScale: 0.6
+    property real desImgTopMargin: -22
+    property real desImgLeftMargin: 20
+    property real fieldTopMargin: 0
+    property real fieldBottomMargin: 0
     property real maxHandWidth: width - 11*cardWidth
     property string charImage1: "file:img/default_avatar_f_0.png"
     property string charImage2: "file:img/default_avatar_m_0.png"
@@ -22,7 +28,7 @@ Item {
     Item {
         id: cardplayerDetailZone
         height: parent.height
-        width: 300
+        width: detailWidth
         Image {
             id: charBack1
             source: "file:img/gamescreen_char_bg.png"
@@ -284,11 +290,11 @@ Item {
                 id: desCardImg
                 anchors {
                     top: parent.top
-                    topMargin: -10
+                    topMargin: desImgTopMargin
                     left: parent.left
-                    leftMargin: 15
+                    leftMargin: desImgLeftMargin
                 }
-                scale: 0.7
+                scale: desImgScale
             }
             Image {
                 id: desLevelRank
@@ -298,7 +304,7 @@ Item {
                     left: parent.left
                     leftMargin: 30
                     top: desCardImg.bottom
-                    topMargin: -10
+                    topMargin: desImgTopMargin
                 }
                 Text {
                     id: levelRankText
@@ -479,8 +485,9 @@ Item {
 
     MessageBox {
         id: messageBox
+        anchors.verticalCenter: parent.verticalCenter
         onClicked: {
-            messageBox.visible = false;
+            messageBox.x = -messageBox.width;
             game.mySet();
             game.setQwMessage(false);
         }
@@ -494,6 +501,8 @@ Item {
             right: parent.right
             left: cardplayerDetailZone.right
             leftMargin: 20
+            topMargin: fieldTopMargin
+            bottomMargin: fieldBottomMargin
         }
 
         Image {
@@ -1225,10 +1234,10 @@ Item {
         onQwMessageChanged: {
             if(game.qwMessage() === true) {
                 messageBox.text = game.qstMessage();
-                messageBox.visible = true;
+                messageBox.x = /*screenWidth*/1024/2 - messageBox.width/2
             }
             else {
-                messageBox.visible = false;
+                messageBox.x = -messageBox.width;
             }
         }
     }

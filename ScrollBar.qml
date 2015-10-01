@@ -20,6 +20,7 @@ Item {
 
     Image {
         source: "file:img/gs_cardinfo_slider.png"
+        visible: flk.visibleArea.heightRatio < 1.0
         anchors.fill: parent
     }
 

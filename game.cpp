@@ -4,6 +4,8 @@
 #include "game.h"
 #include "datamanager.h"
 
+#include <dirent.h>
+#include <iostream>
 //QTextStream cout(stdout);
 //QTextStream cerr(stderr);
 
@@ -31,7 +33,7 @@ DuelInfo::DuelInfo(QObject *parent):
 	clientname[0] = 0;
 	hostname_tag[0] = 0;
 	clientname_tag[0] = 0;
-	strTurn[0] = 0;
+//	strTurn[0] = 0;
     vic_string = 0;
     player_type  = 0;
     time_player = 0;
@@ -63,6 +65,24 @@ bool Game::Initialize(){
     if(!dataManager.LoadStrings("strings.conf")) {
         qDebug()<<"String file initialization FAILED";
             return false;
+    }
+    DIR * dir;
+    struct dirent * dirp;
+    const char *foldername = "./expansions/";
+    if((dir = opendir(foldername)) != NULL) {
+        while((dirp = readdir(dir)) != NULL) {
+            size_t len = strlen(dirp->d_name);
+            if(len < 5 || strcasecmp(dirp->d_name + len - 4, ".cdb") != 0)
+                continue;
+                    char *filepath = (char *)malloc(sizeof(char)*(len + strlen(foldername)));
+                    strncpy(filepath, foldername, strlen(foldername)+1);
+                    strncat(filepath, dirp->d_name, len);
+                    std::cout << "Found file " << filepath << std::endl;
+                    if (!dataManager.LoadDB(filepath))
+                        std::cout << "Error loading file" << std::endl;
+                    free(filepath);
+        }
+        closedir(dir);
     }
     return true;
 }

@@ -5,19 +5,21 @@ import QtQuick.Window 2.2   // for Screen.width and Screen.height
 Image {
     id: root
     width: 1024/*Screen.width*/
-    height: 640/*Screen.height*/
+    height: 600/*Screen.height*/
     source: "file:img/hexa_bg.png"
     fillMode: Image.PreserveAspectCrop
     property real buttonwide: 300
     property real buttonhigh: 50
+    property real screenWidth: width
+    property real screenHeight: height
 
     Item {
         id: menu
         anchors {
-            top: parent.top
+            top: bExit.bottom
             left: parent.left
             right: parent.right
-            bottom: bExit.top
+            bottom: parent.bottom
             bottomMargin: 10
         }
 
@@ -66,14 +68,14 @@ Image {
     Button {
         id: bExit
         x: 100
-        y: root.height - buttonhigh - 50
+        y: /*root.height - buttonhigh -*/ 50
         text: qsTr("Quit")
         onClicked: Qt.quit()
     }
     Button {
         id: bPlay
         x: root.width - buttonwide - 25
-        y: root.height - buttonhigh - 50
+        y: /*root.height - buttonhigh -*/ 50
         text: qsTr("Play")
         property string selectedtext
         onClicked: {

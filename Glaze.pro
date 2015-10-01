@@ -1,6 +1,6 @@
 TEMPLATE = app
 
-CONFIG += c++11 release
+CONFIG += c++11 qml_debug
 
 QT += qml quick widgets core
 

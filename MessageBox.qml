@@ -1,19 +1,27 @@
 import QtQuick 2.0
+import QtQuick.Window 2.2
 
 BorderImage {
     id: mBox
-    visible: false
-    z: 100
-    anchors.centerIn: parent
+//    visible: false
+    z: 1
+    x: -width
+//    anchors.centerIn: parent
     height: 300
     width: 800
     source: "file:img/menubox.png"
-    scale: 0.5
+//    scale: 0.5
     property string text: ""
     signal clicked;
     border { left: 200; top: 110; right: 200; bottom: 110 }
     horizontalTileMode: BorderImage.Stretch
     verticalTileMode: BorderImage.Stretch
+    Behavior on x {
+        NumberAnimation {
+            duration: 200
+        }
+    }
+
     FontLoader {
         id: contentFont
         source: "file:fonts/ChaneyWide.ttf"

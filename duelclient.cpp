@@ -182,6 +182,7 @@ int DuelClient::ClientAnalyze(char * msg, unsigned int len)
         mainGame->showcarddif = 30;
         mainGame->showcardp = 0;
         mainGame->showcard = 101;
+//        mainGame->WaitFrameSignal(40);
         mainGame->showcard = 0;
 
         int playertype = BufferIO::ReadInt8(pbuf);
@@ -205,7 +206,7 @@ int DuelClient::ClientAnalyze(char * msg, unsigned int len)
         extrac = BufferIO::ReadInt16(pbuf);
         mainGame->dField.Initial(mainGame->LocalPlayer(1), deckc, extrac);
         mainGame->dInfo.turn = 0;
-        mainGame->dInfo.strTurn[0] = 0;
+//        mainGame->dInfo.strTurn[0] = 0;
         mainGame->dInfo.is_shuffling = false;
         return true;
     }
@@ -1114,7 +1115,7 @@ int DuelClient::ClientAnalyze(char * msg, unsigned int len)
                             mainGame->dInfo.tag_player[1] = !mainGame->dInfo.tag_player[1];
             }
             if(!mainGame->dInfo.isReplay || !mainGame->dInfo.isReplaySkiping) {
-                    myswprintf(mainGame->dInfo.strTurn, L"Turn:%d", mainGame->dInfo.turn);
+//                    myswprintf(mainGame->dInfo.strTurn, L"Turn:%d", mainGame->dInfo.turn);
                     mainGame->showcardcode = 10;
                     mainGame->showcarddif = 30;
                     mainGame->showcardp = 0;

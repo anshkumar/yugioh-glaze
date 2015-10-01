@@ -57,7 +57,7 @@ void SingleMode::singlePlayStart()
 //    BufferIO::CopyWStr(mainGame->ebNickName->getText(), mainGame->dInfo.hostname, 20);
     mainGame->dInfo.clientname[0] = 0;
     mainGame->dInfo.turn = 0;
-    mainGame->dInfo.strTurn[0] = 0;
+//    mainGame->dInfo.strTurn[0] = 0;
     qDebug()<<"Duel info set";
 
     if(!preload_script(pduel, fname2, slen)) {  //loading the lua script for puzzle in ocgcore
@@ -353,7 +353,7 @@ bool SingleMode::SinglePlayAnalyze(char* msg, unsigned int len)
         }
         case MSG_NEW_TURN: {
             player = BufferIO::ReadInt8(pbuf);
-            //DuelClient::ClientAnalyze(offset, pbuf - offset);     //TODO: causing crash
+            DuelClient::ClientAnalyze(offset, pbuf - offset);     //TODO: causing crash
             break;
         }
         case MSG_NEW_PHASE: {
