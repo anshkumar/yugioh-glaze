@@ -1,6 +1,6 @@
 import QtQuick 2.0
 import QtQuick.XmlListModel 2.0
-import QtQuick.Window 2.2   // for Screen.width and Screen.height
+import QtQuick.Window 2.0   // for Screen.width and Screen.height
 
 Image {
     id: root
@@ -89,21 +89,43 @@ Image {
         id: cField
         visible: false
         anchors.fill: parent
-        Image {
-            source: "file:img/gs_btn_mainmenu.png"
-            scale: 0.75
-            anchors.bottom: parent.bottom
-            anchors.right: parent.right
-            anchors.bottomMargin: 10
-            anchors.rightMargin: 10
-            MouseArea {
-                anchors.fill: parent
+    }
+
+    FontLoader {
+        id: contentFont
+        source: "file:fonts/ChaneyWide.ttf"
+    }
+
+    Rectangle {
+        id: exitScreen
+        anchors.fill: parent
+        z:-1
+        color: "#6f6c6c"
+        opacity: 0.8
+        Row {
+            anchors.centerIn: parent
+            spacing: 10
+            Button {
+                text: qsTr("Exit")
                 onClicked: {
-                    cField.exitClicked();
+                    console.log("EXIT");
                     game.stopSinglePlay(true);
+                    exitScreen.z = -1;
                     comeBack();
+                }
+            }
+            Button {
+                text: qsTr("Cancel")
+                onClicked: {
+                    exitScreen.z = -1;
                 }
             }
         }
     }
+
+    Keys.onEscapePressed: {
+            cField.exitClicked();
+            exitScreen.z = 2;
+            event.accepted = true;
+}
 }

@@ -1,8 +1,8 @@
 TEMPLATE = app
 
-CONFIG += c++11 qml_debug
+CONFIG += c++11 #debug qml_debug
 
-QT += qml quick widgets core
+QT += qml quick widgets core #xmlpatterns xml
 
 SOURCES += main.cpp \
     singlemode.cpp \
