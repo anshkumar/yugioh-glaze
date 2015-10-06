@@ -47,8 +47,8 @@ Image {
             highlight: Rectangle { color: "lightsteelblue"; radius: 5 }
             focus: true
             clip: true
-//            interactive: false
-            }
+            //            interactive: false
+        }
     }
 
     function goAway() {
@@ -96,12 +96,22 @@ Image {
         source: "file:fonts/ChaneyWide.ttf"
     }
 
+    function exitScreenFront() {
+        exitScreen.z = 2;
+        exitScreen.opacity = 0.8
+    }
+
+    function exitScreenBack() {
+        exitScreen.z = -1;
+        exitScreen.opacity = 0;
+    }
+
     Rectangle {
         id: exitScreen
         anchors.fill: parent
         z:-1
-        color: "#6f6c6c"
-        opacity: 0.8
+        color: "black"
+        opacity: 0
         Row {
             anchors.centerIn: parent
             spacing: 10
@@ -110,22 +120,25 @@ Image {
                 onClicked: {
                     console.log("EXIT");
                     game.stopSinglePlay(true);
-                    exitScreen.z = -1;
+                    exitScreenBack()
                     comeBack();
                 }
             }
             Button {
                 text: qsTr("Cancel")
                 onClicked: {
-                    exitScreen.z = -1;
+                    exitScreenBack();
                 }
             }
+        }
+        Behavior on opacity {
+            NumberAnimation { duration: 150 }
         }
     }
 
     Keys.onEscapePressed: {
-            cField.exitClicked();
-            exitScreen.z = 2;
-            event.accepted = true;
-}
+        cField.exitClicked();
+        exitScreenFront();
+        event.accepted = true;
+    }
 }

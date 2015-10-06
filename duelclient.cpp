@@ -1105,7 +1105,7 @@ int DuelClient::ClientAnalyze(char * msg, unsigned int len)
             int player = mainGame->LocalPlayer(BufferIO::ReadInt8(pbuf));
             mainGame->dInfo.turn++;
             if(!mainGame->dInfo.isTag && mainGame->dInfo.turn == 5 && !mainGame->dInfo.isReplay && mainGame->dInfo.player_type < 7) {
-                    mainGame->stLeaveGame = QString::fromWCharArray(dataManager.GetSysString(1351));
+                    mainGame->stLeaveGame = QString::fromWCharArray(dataManager.GetSysString(1351));    //TODO: Tag leave button
                     mainGame->btnLeaveGame = true;
             }
             if(mainGame->dInfo.isTag && mainGame->dInfo.turn != 1) {
@@ -1116,7 +1116,7 @@ int DuelClient::ClientAnalyze(char * msg, unsigned int len)
             }
             if(!mainGame->dInfo.isReplay || !mainGame->dInfo.isReplaySkiping) {
 //                    myswprintf(mainGame->dInfo.strTurn, L"Turn:%d", mainGame->dInfo.turn);
-                    mainGame->showcardcode = 10;
+                    mainGame->showcardcode = 10;    //TODO: check these values
                     mainGame->showcarddif = 30;
                     mainGame->showcardp = 0;
                     mainGame->showcard = 101;
@@ -1168,7 +1168,7 @@ int DuelClient::ClientAnalyze(char * msg, unsigned int len)
                     break;
             }
             if(!mainGame->dInfo.isReplay || !mainGame->dInfo.isReplaySkiping) {
-                    mainGame->showcard = 101;
+                    mainGame->showcard = 101;   //TODO: check values
 //                    mainGame->WaitFrameSignal(40);
                     mainGame->showcard = 0;
             }
