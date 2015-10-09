@@ -163,7 +163,7 @@ If your card is a field spell, however, you will also need a `512 x 512` `.png` 
 
 ## Step 6: Scripting ##
 
-Next, you need to script your card. That will be covered in the next tutorial.
+Next, you need to script your card. 
 
 # Creating Passive effects #
 
