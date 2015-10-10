@@ -4,7 +4,12 @@
 #include "game.h"
 #include "datamanager.h"
 
+#ifdef _WIN32
+#include <io.h>
+#include <Windows.h>
+#else
 #include <dirent.h>
+#endif
 #include <iostream>
 //QTextStream cout(stdout);
 //QTextStream cerr(stderr);
@@ -66,6 +71,20 @@ bool Game::Initialize(){
         qDebug()<<"String file initialization FAILED";
             return false;
     }
+	#ifdef _WIN32
+	char fpath[1000];
+	WIN32_FIND_DATAW fdataw;
+	HANDLE fh = FindFirstFileW(L"./expansions/*.cdb", &fdataw);
+	if(fh != INVALID_HANDLE_VALUE) {
+		do {
+			if(!(fdataw.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+				sprintf(fpath, "./expansions/%ls", fdataw.cFileName);
+				dataManager.LoadDB(fpath);
+			}
+		} while(FindNextFileW(fh, &fdataw));
+		FindClose(fh);
+	}
+	#else
     DIR * dir;
     struct dirent * dirp;
     const char *foldername = "./expansions/";
@@ -84,6 +103,7 @@ bool Game::Initialize(){
         }
         closedir(dir);
     }
+	#endif
     return true;
 }
 
