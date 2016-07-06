@@ -92,6 +92,8 @@ public:
     Q_INVOKABLE QString qstMessage();
     Q_INVOKABLE void startSinglePlay(QString name);
     Q_INVOKABLE void mySet();
+    Q_INVOKABLE int getShowCardCode();
+    Q_INVOKABLE int getShowCard();
 
 //    void setQstMessage(QString);
     bool qstHintMsg();
@@ -235,6 +237,7 @@ signals:
     void qwACMessageChanged();
     void qwANRaceChanged();
     void qwinChanged();
+    void qshowCardChanged();
 };
 
 extern Game* mainGame;

@@ -1,4 +1,6 @@
-#include <QGuiApplication>
+#include <VPApplication>
+#include <QApplication>
+#include <QQmlApplicationEngine>
 #include <QQuickView>
 #include <QQmlEngine>   // for connect()
 #include <QCoreApplication> // for connect()
@@ -8,8 +10,13 @@
 
 int main(int argc, char *argv[])
 {
-    QGuiApplication app(argc, argv);
-    QQuickView view;
+    QApplication app(argc, argv);
+    VPApplication vplay;
+
+    QQmlApplicationEngine engine;
+    vplay.initialize(&engine);
+
+//    QQuickView view;
     qDebug()<<"From main thread: "<<QThread::currentThreadId();
     qRegisterMetaType<glaze::ClientCard*>("ClientCard*");
 	qRegisterMetaType<glaze::ClientCard**>("ClientCard**");
@@ -21,13 +28,15 @@ int main(int argc, char *argv[])
         return 0;
 
     // context property should come before you set qml source
-    view.rootContext()->setContextProperty("clientField",&glaze::mainGame->dField);
-    view.rootContext()->setContextProperty("game",glaze::mainGame);
-    view.rootContext()->setContextProperty("duelInfo",&glaze::mainGame->dInfo);
+    engine.rootContext()->setContextProperty("clientField",&glaze::mainGame->dField);
+    engine.rootContext()->setContextProperty("game",glaze::mainGame);
+    engine.rootContext()->setContextProperty("duelInfo",&glaze::mainGame->dInfo);
 
-    view.setSource(QUrl("qrc:/main.qml"));
-    view.show();
+    vplay.setMainQmlFileName(QStringLiteral("qml/main.qml"));
+    engine.load(QUrl(vplay.mainQmlFileName()));
+//    view.setSource(QUrl("qrc:/main.qml"));
+//    view.show();
 //    view.showFullScreen();
-    QObject::connect(view.engine(), SIGNAL(quit()), QGuiApplication::instance(), SLOT(quit()));
+//    QObject::connect(engine, SIGNAL(quit()), QApplication::instance(), SLOT(quit()));
     return app.exec();
 }

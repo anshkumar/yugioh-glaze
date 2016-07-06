@@ -63,11 +63,11 @@ Game::~Game() {
 bool Game::Initialize(){
     srand(time(0));
 //    memset(&dInfo, 0, sizeof(DuelInfo));	//DO NOT uncomment
-    if(!dataManager.LoadDB("cards.cdb")) {
+    if(!dataManager.LoadDB("./assets/database/cards.cdb")) {
         qDebug()<<"Card database initialization FAILED";
             return false;
     }
-    if(!dataManager.LoadStrings("strings.conf")) {
+    if(!dataManager.LoadStrings("./assets/strings.conf")) {
         qDebug()<<"String file initialization FAILED";
             return false;
     }
@@ -112,7 +112,7 @@ void Game::startSinglePlay(QString name) {
     workerThread = new QThread;
     sMode->name = name;
     singleSignal.setNoWait(false);
-    qDebug()<<"SingleMode object craeted at "<<sMode;
+    qDebug()<<"SingleMode object created at "<<sMode;
     sMode->moveToThread(workerThread);
     connect(workerThread, SIGNAL(started()), sMode, SLOT(singlePlayStart()));
     connect(sMode, SIGNAL(finished()), workerThread, SLOT(quit()));
@@ -123,12 +123,12 @@ void Game::startSinglePlay(QString name) {
 }
 
 void Game::stopSinglePlay(bool is_exiting) {
+    qDebug()<<"SingleMode stopSinglePlay called";
     singleSignal.setNoWait(true);
     sMode->is_closing = is_exiting;
     sMode->is_continuing = false;
     actionSignal.set();
     singleSignal.set();
-    qDebug()<<"SingleMode stopSinglePlay called";
 }
 
 bool Game::qwMessage() const
@@ -288,6 +288,14 @@ QList<bool> Game::qchkRace()
 bool Game::qwin()
 {
     return win;
+}
+
+int Game::getShowCardCode() {
+    return showcardcode;
+}
+
+int Game::getShowCard() {
+    return showcard;
 }
 
 void Game::AddChatMsg(wchar_t* msg, int player) {
