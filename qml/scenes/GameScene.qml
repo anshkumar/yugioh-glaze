@@ -5,8 +5,8 @@ import "../common"
 SceneBase {
     id: gameScene
 
-    property real cardWidth: 50
-    property real cardHeight: 73
+    property real cardWidth: 45
+    property real cardHeight: 65
     property real detailWidth: 300
     property real desImgScale: 0.6
     property real desImgTopMargin: -22
@@ -19,9 +19,170 @@ SceneBase {
     signal exitClicked;
     property string clientname: ""
     property string hostname: ""
+    property bool cardSelectDialogBoxCancelable: true
+    property var selectedCards: []
+    property bool selectReady: false
+
+    //Messages
+    property int msg_retry:				1
+    property int msg_hint:				2
+    property int msg_waiting:			3
+    property int msg_start:				4
+    property int msg_win:				5
+    property int msg_update_data:		6
+    property int msg_update_card:		7
+    property int msg_request_deck:		8
+    property int msg_select_battlecmd:	10
+    property int msg_select_idlecmd:	11
+    property int msg_select_effectyn:	12
+    property int msg_select_yesno:		13
+    property int msg_select_option:		14
+    property int msg_select_card:		15
+    property int msg_select_chain:		16
+    property int msg_select_place:		18
+    property int msg_select_position:	19
+    property int msg_select_tribute:	20
+    property int msg_sort_chain:		21
+    property int msg_select_counter:	22
+    property int msg_select_sum:		23
+    property int msg_select_disfield:	24
+    property int msg_sort_card:			25
+    property int msg_confirm_decktop:	30
+    property int msg_confirm_cards:		31
+    property int msg_shuffle_deck:		32
+    property int msg_shuffle_hand:		33
+    property int msg_refresh_deck:		34
+    property int msg_swap_grave_deck:	35
+    property int msg_shuffle_set_card:	36
+    property int msg_reverse_deck:		37
+    property int msg_deck_top:			38
+    property int msg_new_turn:			40
+    property int msg_new_phase:			41
+    property int msg_move:				50
+    property int msg_pos_change:		53
+    property int msg_set:				54
+    property int msg_swap:				55
+    property int msg_field_disabled:	56
+    property int msg_summoning:			60
+    property int msg_summoned:			61
+    property int msg_spsummoning:		62
+    property int msg_spsummoned:		63
+    property int msg_flipsummoning:		64
+    property int msg_flipsummoned:		65
+    property int msg_chaining:			70
+    property int msg_chained:			71
+    property int msg_chain_solving:		72
+    property int msg_chain_solved:		73
+    property int msg_chain_end:			74
+    property int msg_chain_negated:		75
+    property int msg_chain_disabled:	76
+    property int msg_card_selected:		80
+    property int msg_random_selected:	81
+    property int msg_become_target:		83
+    property int msg_draw:				90
+    property int msg_damage:			91
+    property int msg_recover:			92
+    property int msg_equip:				93
+    property int msg_lpupdate:			94
+    property int msg_unequip:			95
+    property int msg_card_target:		96
+    property int msg_cancel_target:		97
+    property int msg_pay_lpcost:		100
+    property int msg_add_counter:		101
+    property int msg_remove_counter:	102
+    property int msg_attack:			110
+    property int msg_battle:			111
+    property int msg_attack_disabled:	112
+    property int msg_damage_step_start:	113
+    property int msg_damage_step_end:	114
+    property int msg_missed_effect:		120
+    property int msg_be_chain_target:	121
+    property int msg_create_relation:	122
+    property int msg_release_relation:	123
+    property int msg_toss_coin:			130
+    property int msg_toss_dice:			131
+    property int msg_announce_race:		140
+    property int msg_announce_attrib:	141
+    property int msg_announce_card:		142
+    property int msg_announce_number:	143
+    property int msg_card_hint:			160
+    property int msg_tag_swap:			161
+    property int msg_reload_field:		162
+    property int msg_ai_name:			163
+    property int msg_show_hint:			164
+    property int msg_match_kill:		170
+    property int msg_custom_msg:		180
+
+    //Phase
+    property int phase_draw:		0x01
+    property int phase_standby:		0x02
+    property int phase_main1:		0x04
+    property int phase_battle:		0x08
+    property int phase_damage:		0x10
+    property int phase_damage_cal:	0x20
+    property int phase_main2:		0x40
+    property int phase_end:			0x80
 
     function setPuzzle(fileName) {
         game.startSinglePlay(fileName);
+    }
+
+    function cardSelectDialogBoxBehavior(list, lModel, viewMode) {
+        if(list.count > 0) {
+            if(cardSelectDialogBox.slidedOut === true && viewMode === true) {
+                cardSelectDialogBox.model = lModel;
+                cardSelectDialogBox.slideIn();
+            }
+            else {
+                if(duelInfo.getCurMsg() === msg_select_card) {
+                    if(selectedCards.length == 0) {
+                        if(cardSelectDialogBoxCancelable) {
+                            game.setResponseI(-1);
+                            cardSelectDialogBox.slideOut();
+                            gameScene.clearSelectedCards();
+                        }
+                    }
+                    if(selectReady) {
+                        var respBuf = [];
+                        respBuf[0] = selectedCards.length;
+                        for(var i = 0; i < selectedCards.length; i += 1)
+                            respBuf[i + 1] = selectedCards[i].selectSeq;
+                        game.setResponseB(respBuf, selectedCards.length + 1);
+                        cardSelectDialogBox.slideOut();
+                        gameScene.clearSelectedCards();
+                    }
+                }else {
+                    cardSelectDialogBox.slideOut();
+                    gameScene.clearSelectedCards();
+                }
+            }
+        }
+    }
+
+    // select item
+    signal selectCard(variant userData)
+    onSelectCard: {
+        gameScene.selectedCards.push(userData)
+        console.log("# Currently " + gameScene.selectedCards.length + " items are selected");
+    }
+
+    // deselect item
+    signal deselectCard(variant userData)
+    onDeselectCard: {
+        for (var i = 0; i < gameScene.selectedCards.length; i += 1) {
+            //             console.log("# Checking index "  + index + " with user " + aSelectedItemList[index].userId + " comparing with " + userData.userId);
+            if (gameScene.selectedCards[i].selectSeq == userData) {
+                gameScene.selectedCards.splice(i, 1);
+                break;
+            }
+        }
+        console.log("# Currently " + gameScene.selectedCards.length + " items are selected");
+    }
+
+    // signal to clear
+    signal clearSelectedCards()
+    onClearSelectedCards: {
+        gameScene.selectedCards = [];
     }
 
     // back button to leave scene
@@ -49,7 +210,7 @@ SceneBase {
         anchors.top: gameScene.gameWindowAnchorItem.top
         width: detailWidth
         height: 100
-        MultiResolutionImage {
+        Image {
             id: charBack1
             source: "../../assets/img/gamescreen_char_bg.png"
             anchors {
@@ -59,7 +220,7 @@ SceneBase {
             height: player1Image.height
             width: 300
         }
-        MultiResolutionImage {
+        Image {
             id: charName1
             source: "../../assets/img/gs_char_namebox.png"
             anchors {
@@ -80,7 +241,7 @@ SceneBase {
                 color: "#1030e5"
             }
         }
-        MultiResolutionImage {
+        Image {
             id: progressBar1
             source: "../../assets/img/gamescreen_lifepoints_meter_player.png"
             x: player1Image.width
@@ -94,7 +255,7 @@ SceneBase {
                 NumberAnimation { duration: 500 }
             }
         }
-        MultiResolutionImage {
+        Image {
             source: "../../assets/img/gamescreen_lifepoints_cover.png"
             width: progressBar1.width + 7
             height: progressBar1.height + 5
@@ -103,7 +264,7 @@ SceneBase {
                 left: player1Image.right
             }
         }
-        MultiResolutionImage {
+        Image {
             id: player1Image
             anchors {
                 bottom: parent.bottom
@@ -119,7 +280,7 @@ SceneBase {
                 anchors.centerIn: parent
             }
 
-            MultiResolutionImage {
+            Image {
                 source: charImage1
                 width: 88
                 height: 88
@@ -136,7 +297,7 @@ SceneBase {
                 topMargin: 5
             }
 
-            MultiResolutionImage {
+            Image {
                 id: lp1Heart
                 source: "../../assets/img/gs_LP_icon_blue.png"
                 width: parent.width/5
@@ -180,7 +341,7 @@ SceneBase {
         anchors.bottom: gameScene.gameWindowAnchorItem.bottom
         width: detailWidth
         height: 100
-        MultiResolutionImage {
+        Image {
             id: charBack2
             source: "../../assets/img/gamescreen_char_bg.png"
             anchors {
@@ -190,7 +351,7 @@ SceneBase {
             height: player2Image.height
             width: 300
         }
-        MultiResolutionImage {
+        Image {
             id: charName2
             source: "../../assets/img/gs_char_namebox.png"
             anchors {
@@ -211,7 +372,7 @@ SceneBase {
                 color: "#ff0000"
             }
         }
-        MultiResolutionImage {
+        Image {
             id: progressBar2
             source: "../../assets/img/gamescreen_lifepoints_meter_opponent.png"
             x: player2Image.width
@@ -225,7 +386,7 @@ SceneBase {
                 NumberAnimation { duration: 500 }
             }
         }
-        MultiResolutionImage {
+        Image {
             source: "../../assets/img/gamescreen_lifepoints_cover.png"
             width: progressBar2.width + 7
             height: progressBar2.height + 5
@@ -234,7 +395,7 @@ SceneBase {
                 left: player2Image.right
             }
         }
-        MultiResolutionImage {
+        Image {
             id: player2Image
             anchors {
                 top : parent.top
@@ -250,7 +411,7 @@ SceneBase {
                 anchors.centerIn: parent
             }
 
-            MultiResolutionImage {
+            Image {
                 source: charImage2
                 width: 88
                 height: 88
@@ -267,7 +428,7 @@ SceneBase {
                 topMargin: 5
             }
 
-            MultiResolutionImage {
+            Image {
                 id: lp2Heart
                 source: "../../assets/img/gs_LP_icon_red.png"
                 width: parent.width/5
@@ -305,7 +466,7 @@ SceneBase {
         }
     }
 
-    MultiResolutionImage {
+    Image {
         id: description
         source: "../../assets/img/gs_card_info.png"
         height: 370
@@ -314,7 +475,7 @@ SceneBase {
             left: gameScene.gameWindowAnchorItem.left
             verticalCenter: gameScene.gameWindowAnchorItem.verticalCenter
         }
-        MultiResolutionImage {
+        Image {
             id: desCardImg
             anchors {
                 top: parent.top
@@ -324,7 +485,7 @@ SceneBase {
             }
             scale: desImgScale
         }
-        MultiResolutionImage {
+        Image {
             id: desLevelRank
             width: 20
             height: 20
@@ -370,7 +531,7 @@ SceneBase {
             }
         }
 
-        MultiResolutionImage {
+        Image {
             id: cardLogo1   // Card attribute (for monster card), spell logo(for spell card) etc
             width: 30
             height: 30
@@ -392,7 +553,7 @@ SceneBase {
                 }
             }
         }
-        MultiResolutionImage {
+        Image {
             id: cardLogo2   // Card race(for monster), quick spell etc
             width: 30
             height: 30
@@ -414,7 +575,7 @@ SceneBase {
                 }
             }
         }
-        MultiResolutionImage {
+        Image {
             id: desLscale
             width: desLevelRank.width
             height: desLevelRank.height
@@ -435,7 +596,7 @@ SceneBase {
                 }
             }
         }
-        MultiResolutionImage {
+        Image {
             id: desRscale
             width: desLscale.width
             height: desLscale.height
@@ -532,7 +693,7 @@ SceneBase {
             bottomMargin: fieldBottomMargin
         }
 
-        MultiResolutionImage {
+        Image {
             id: extraCardZone1
             width: cardHeight + 20
             height: cardHeight + 20
@@ -542,7 +703,7 @@ SceneBase {
                 bottomMargin: 5
                 left: duelField.left
             }
-            MultiResolutionImage {
+            Image {
                 height: cardHeight
                 fillMode: Image.PreserveAspectFit
                 anchors.centerIn: parent
@@ -552,13 +713,32 @@ SceneBase {
                 width: cardWidth; height: cardHeight
                 anchors.centerIn: parent
                 ListView {
+                    id: extraCardZone1List
                     anchors.fill: parent
                     model: clientField.extra1
                     spacing: -cardHeight + 0.5
-                    delegate: MultiResolutionImage {
+                    delegate: Image {
                         width: cardWidth
                         height: cardHeight
                         source: "../../assets/img/0000.png"
+                    }
+                }
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: cardSelectDialogBoxBehavior(extraCardZone1List, clientField.extra1, true)
+                }
+                Image {
+                    id: extraRotationAnimation
+                    anchors.fill: parent
+                    source: "../../assets/img/act.png"
+                    enabled: false
+                    visible: false
+                    fillMode: Image.PreserveAspectFit
+                    RotationAnimation on rotation {
+                        loops: Animation.Infinite
+                        from: 0
+                        to: 360
+                        duration: 3000
                     }
                 }
             }
@@ -575,7 +755,7 @@ SceneBase {
             height: cardHeight + 20
             Component {
                 id: lscaleCardZoneDelegate1
-                MultiResolutionImage {
+                Image {
                     source: {
                         if(index === 6) {
                             width = cardHeight + 20;
@@ -586,17 +766,13 @@ SceneBase {
                             return "";
                     }
                     ClientCard {
-                        width: cardWidth; height: cardHeight;
+//                        cWidth: cardWidth; cHeight: cardHeight;
                         anchors.centerIn: parent
                         isEnableDown: false
-                        front: MultiResolutionImage {
-                            width: cardWidth; height: cardHeight;
-                            anchors.centerIn: parent
-                            source : {
-                                if(index == 6 && code != 0)
-                                    return "../../assets/pics/"+ code +".jpg";
-                                return "";
-                            }
+                        source: {
+                            if(index == 6 && code != 0)
+                                return "../../assets/pics/"+ code +".jpg";
+                            return "";
                         }
                     }
 
@@ -621,7 +797,7 @@ SceneBase {
             height: cardHeight + 20
             Component {
                 id: fieldCardZoneDelegate1
-                MultiResolutionImage {
+                Image {
                     source: {
                         if(index === 5) {
                             width = cardHeight + 20;
@@ -631,23 +807,23 @@ SceneBase {
                         else
                             return "";
                     }
-                    MultiResolutionImage {
+                    Image {
                         height: cardHeight
                         fillMode: Image.PreserveAspectFit
                         anchors.centerIn: parent
                         source: (index === 5)?"../../assets/img/gs_icon_card_spell.png":""
                         ClientCard {
-                            width: cardWidth; height: cardHeight;
+                            CommandMenu {
+                                anchors.bottom: parent.top
+                                width: parent.width
+                            }
+//                            width: cardWidth; height: cardHeight;
                             anchors.centerIn: parent
                             isEnableDown: false
-                            front: MultiResolutionImage {
-                                width: cardWidth; height: cardHeight;
-                                anchors.centerIn: parent
-                                source : {
-                                    if(index === 5 && code != 0)
-                                        return "../../assets/pics/"+ code +".jpg";
-                                    return "";
-                                }
+                            source: {
+                                if(index === 5 && code != 0)
+                                    return "../../assets/pics/"+ code +".jpg";
+                                return "";
                             }
                         }
                     }
@@ -674,24 +850,27 @@ SceneBase {
             }
             Component {
                 id: spellZoneDelegate1
-                MultiResolutionImage {
-                    width: cardHeight + 20
-                    height: cardHeight + 20
-                    source: "../../assets/img/gs_cardslot_player.png"
-                    ClientCard {
-                        isEnableDown: false
-                        width: cardWidth; height: cardHeight
-                        anchors.centerIn: parent
-                        front: MultiResolutionImage {
-                            width: cardWidth; height: cardHeight;
-                            source: (code != 0)?"../../assets/pics/"+ code +".jpg":""
+                Column {
+                    CommandMenu {
+                        id: spell1CommandMenu
+                        width: cardWidth
+                    }
+                    Image {
+                        width: cardHeight + 20
+                        height: cardHeight + 20
+                        source: "../../assets/img/gs_cardslot_player.png"
+                        ClientCard {
+                            isEnableDown: false
+//                            width: cardWidth; height: cardHeight
                             anchors.centerIn: parent
-                        }
-                        flipped: (position & pos_facedown)? true: false;
-                        MultiResolutionImage {
-                            id: spellZoneEquipImg1
-                            fillMode: Image.PreserveAspectFit
-                            anchors.fill: parent
+                            source: (code != 0)?"../../assets/pics/"+ code +".jpg":""
+                            flipped: (position & pos_facedown)? true: false;
+                            Image {
+                                id: spellZoneEquipImg1
+                                fillMode: Image.PreserveAspectFit
+                                anchors.fill: parent
+                            }
+//                            onShowMenu: spell1CommandMenu.showMenu(flag)
                         }
                     }
                 }
@@ -719,7 +898,7 @@ SceneBase {
             height: cardHeight + 20
             Component {
                 id: rscaleCardZoneDelegate1
-                MultiResolutionImage {
+                Image {
                     source: {
                         if(index === 7) {
                             width = cardHeight + 20;
@@ -730,17 +909,13 @@ SceneBase {
                             return "";
                     }
                     ClientCard {
-                        width: cardWidth; height: cardHeight;
+//                        width: cardWidth; height: cardHeight;
                         anchors.centerIn: parent
                         isEnableDown: false
-                        front: MultiResolutionImage {
-                            width: cardWidth; height: cardHeight;
-                            anchors.centerIn: parent
-                            source : {
-                                if(index === 7 && code != 0)
-                                    return "../../assets/pics/"+ code +".jpg";
-                                return "";
-                            }
+                        source: {
+                            if(index === 7 && code != 0)
+                                return "../../assets/pics/"+ code +".jpg";
+                            return "";
                         }
                     }
 
@@ -767,26 +942,23 @@ SceneBase {
             }
             Component {
                 id: monsterZoneDelegate1
-                MultiResolutionImage {
+                Image {
                     width: cardHeight + 20
                     height: cardHeight + 20
                     source: "../../assets/img/gs_cardslot_player.png"
                     ClientCard {
                         isEnableDown: false
-                        width: cardWidth; height: cardHeight
-                        anchors.centerIn: parent
-                        front: MultiResolutionImage {
-                            width: cardWidth; height: cardHeight;
-                            source: (code != 0)?"../../assets/pics/"+ code +".jpg":""
-                            anchors.centerIn: parent
-                        }
+                        //                            width: cardWidth; height: cardHeight
+                        //                            anchors.centerIn: parent
+                        source:(code != 0)?"../../assets/pics/"+ code +".jpg":""
                         rotation: (position & pos_defence)? 90: 0;
                         flipped: (position & pos_facedown)? true: false;
-                        MultiResolutionImage {
+                        Image {
                             id: monsterZoneEquipImg1
                             fillMode: Image.PreserveAspectFit
                             anchors.fill: parent
                         }
+                        //                            onShowMenu: monster1CommandMenu.showMenu(flag)
                     }
                 }
             }
@@ -802,7 +974,59 @@ SceneBase {
             }
         }
 
-        MultiResolutionImage {
+        Item {
+            id: controlZone
+            anchors {
+                left: duelField.left
+                right: duelField.right
+                bottom: monsterZone1.top
+                bottomMargin: 5
+                top: monsterZone2.bottom
+                topMargin: 5
+            }
+            Row {
+                anchors.fill: parent
+                spacing: 5
+                GameScreenButton {
+                    id: drawButton
+                    height: controlZone.height;
+                    width: controlZone.width/6 - 5;
+                    text: "DRAW"
+                }
+                GameScreenButton {
+                    id: standbyButton
+                    height: controlZone.height;
+                    width: controlZone.width/6 - 5;
+                    text: "STANDBY"
+                }
+                GameScreenButton {
+                    id: main1Button
+                    height: controlZone.height;
+                    width: controlZone.width/6 - 5;
+                    text: "MAIN1"
+                }
+                GameScreenButton {
+                    id: battleButton
+                    height: controlZone.height;
+                    width: controlZone.width/6 - 5;
+                    text: "BATTLE"
+                }
+                GameScreenButton {
+                    id: main2Button
+                    height: controlZone.height;
+                    width: controlZone.width/6 - 5;
+                    text: "MAIN2"
+                }
+                GameScreenButton {
+                    id: endButton
+                    height: controlZone.height;
+                    width: controlZone.width/6 - 5;
+                    text: "END"
+                }
+            }
+        }
+
+        Image {
             id: graveyardCardZone1
             width: cardHeight + 20
             height: cardHeight + 20
@@ -812,24 +1036,48 @@ SceneBase {
                 //                left: monsterZone1.right
             }
             source: "../../assets/img/gs_cardslot_player.png"
-            MultiResolutionImage {
+            Image {
                 height: cardHeight
                 fillMode: Image.PreserveAspectFit
                 anchors.centerIn: parent
                 source: "../../assets/img/gs_icon_card_graveyard.png"
             }
-            ClientCard {
-                width: cardWidth; height: cardHeight;
+            Item {
+                width: cardWidth; height: cardHeight
                 anchors.centerIn: parent
-                isEnableDown: false
-                front: MultiResolutionImage {
-                    width: cardWidth; height: cardHeight;
-                    anchors.centerIn: parent
+                ListView {
+                    id: graveyardCardZone1List
+                    anchors.fill: parent
+                    model: clientField.grave1
+                    spacing: -cardHeight + 0.5
+                    delegate: Image {
+                        width: cardWidth; height: cardHeight;
+                        source: (code != 0)? "../../assets/pics/"+ code +".jpg": ""
+                        anchors.centerIn: parent
+                    }
+                }
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: cardSelectDialogBoxBehavior(graveyardCardZone1List, clientField.grave1, true)
+                }
+                Image {
+                    id: graveRotationAnimation
+                    anchors.fill: parent
+                    source: "../../assets/img/act.png"
+                    enabled: false
+                    visible: false
+                    fillMode: Image.PreserveAspectFit
+                    RotationAnimation on rotation {
+                        loops: Animation.Infinite
+                        from: 0
+                        to: 360
+                        duration: 3000
+                    }
                 }
             }
         }
 
-        MultiResolutionImage {
+        Image {
             id: deckCardZone1
             width: cardHeight + 20
             height: cardHeight + 20
@@ -843,19 +1091,38 @@ SceneBase {
                 width: cardWidth; height: cardHeight
                 anchors.centerIn: parent
                 ListView {
+                    id: deckCardZone1List
                     anchors.fill: parent
                     model: clientField.deck1
                     spacing: -cardHeight + 0.5
-                    delegate: MultiResolutionImage {
+                    delegate: Image {
                         width: cardWidth
                         height: cardHeight
                         source: "../../assets/img/0000.png"
                     }
                 }
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: cardSelectDialogBoxBehavior(deckCardZone1List, clientField.deck1, duelInfo.isSingleMode())
+                }
+                Image {
+                    id: deckRotationAnimation
+                    anchors.fill: parent
+                    source: "../../assets/img/act.png"
+                    enabled: false
+                    visible: false
+                    fillMode: Image.PreserveAspectFit
+                    RotationAnimation on rotation {
+                        loops: Animation.Infinite
+                        from: 0
+                        to: 360
+                        duration: 3000
+                    }
+                }
             }
         }
 
-        MultiResolutionImage {
+        Image {
             id: deckCardZone2
             width: cardHeight + 20
             height: cardHeight + 20
@@ -869,14 +1136,19 @@ SceneBase {
                 width: cardWidth; height: cardHeight
                 anchors.centerIn: parent
                 ListView {
+                    id: deckCardZone2List
                     anchors.fill: parent
                     model: clientField.deck2
                     spacing: -cardHeight + 0.5
-                    delegate: MultiResolutionImage {
+                    delegate: Image {
                         width: cardWidth
                         height: cardHeight
                         source: "../../assets/img/0000.png"
                     }
+                }
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: cardSelectDialogBoxBehavior(deckCardZone2List, clientField.deck2, duelInfo.isSingleMode())
                 }
             }
         }
@@ -892,7 +1164,7 @@ SceneBase {
             height: cardHeight + 20
             Component {
                 id: rscaleCardZoneDelegate2
-                MultiResolutionImage {
+                Image {
                     source: {
                         if(index === 7) {
                             width = cardHeight + 20;
@@ -903,17 +1175,13 @@ SceneBase {
                             return "";
                     }
                     ClientCard {
-                        width: cardWidth; height: cardHeight;
+//                        width: cardWidth; height: cardHeight;
                         anchors.centerIn: parent
                         isEnableDown: false
-                        front: MultiResolutionImage {
-                            width: cardWidth; height: cardHeight;
-                            anchors.centerIn: parent
-                            source : {
-                                if(index === 7 && code != 0)
-                                    return "../../assets/pics/"+ code +".jpg";
-                                return "";
-                            }
+                        source: {
+                            if(index === 7 && code != 0)
+                                return "../../assets/pics/"+ code +".jpg";
+                            return "";
                         }
                         rotation: 180
                     }
@@ -928,7 +1196,7 @@ SceneBase {
             }
         }
 
-        MultiResolutionImage {
+        Image {
             id: graveyardCardZone2
             width: cardHeight + 20
             height: cardHeight + 20
@@ -939,21 +1207,30 @@ SceneBase {
             }
 
             source: "../../assets/img/gs_cardslot_opponent.png"
-            MultiResolutionImage {
+            Image {
                 height: cardHeight
                 fillMode: Image.PreserveAspectFit
                 anchors.centerIn: parent
                 source: "../../assets/img/gs_icon_card_graveyard.png"
             }
-            ClientCard {
-                width: cardWidth; height: cardHeight;
+            Item {
+                width: cardWidth; height: cardHeight
                 anchors.centerIn: parent
-                isEnableDown: false
-                front: MultiResolutionImage {
-                    width: cardWidth; height: cardHeight;
-                    anchors.centerIn: parent
+                ListView {
+                    id: graveyardCardZone2List
+                    anchors.fill: parent
+                    model: clientField.grave2
+                    spacing: -cardHeight + 0.5
+                    delegate: Image {
+                        width: cardWidth; height: cardHeight;
+                        source: (code != 0)? "../../assets/pics/"+ code +".jpg": ""
+                        anchors.centerIn: parent
+                    }
                 }
-                rotation: 180
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: cardSelectDialogBoxBehavior(graveyardCardZone2List, clientField.grave2, true)
+                }
             }
         }
 
@@ -970,21 +1247,17 @@ SceneBase {
             }
             Component {
                 id: spellZoneDelegate2
-                MultiResolutionImage {
+                Image {
                     width: cardHeight + 20
                     height: cardHeight + 20
                     source: "../../assets/img/gs_cardslot_opponent.png"
                     ClientCard {
                         isEnableDown: false
-                        width: cardWidth; height: cardHeight
+//                        width: cardWidth; height: cardHeight
                         anchors.centerIn: parent
-                        front: MultiResolutionImage {
-                            width: cardWidth; height: cardHeight;
-                            source: (code != 0)?"../../assets/pics/"+ code +".jpg":""
-                            anchors.centerIn: parent
-                        }
+                        source: (code != 0)?"../../assets/pics/"+ code +".jpg":""
                         flipped: (position & pos_facedown)? true: false;
-                        MultiResolutionImage {
+                        Image {
                             id: spellZoneEquipImg2
                             fillMode: Image.PreserveAspectFit
                             anchors.fill: parent
@@ -1016,7 +1289,7 @@ SceneBase {
             height: cardHeight + 20
             Component {
                 id: lscaleCardZoneDelegate2
-                MultiResolutionImage {
+                Image {
                     source: {
                         if(index === 6) {
                             width = cardHeight + 20;
@@ -1027,17 +1300,13 @@ SceneBase {
                             return "";
                     }
                     ClientCard {
-                        width: cardWidth; height: cardHeight;
+//                        width: cardWidth; height: cardHeight;
                         anchors.centerIn: parent
                         isEnableDown: false
-                        front: MultiResolutionImage {
-                            width: cardWidth; height: cardHeight;
-                            anchors.centerIn: parent
-                            source : {
-                                if(index === 6 && code != 0)
-                                    return "../../assets/pics/"+ code +".jpg";
-                                return "";
-                            }
+                        source: {
+                            if(index === 6 && code != 0)
+                                return "../../assets/pics/"+ code +".jpg";
+                            return "";
                         }
                         rotation: 180
                     }
@@ -1065,22 +1334,18 @@ SceneBase {
             }
             Component {
                 id: monsterZoneDelegate2
-                MultiResolutionImage {
+                Image {
                     width: cardHeight + 20
                     height: cardHeight + 20
                     source: "../../assets/img/gs_cardslot_opponent.png"
                     ClientCard {
                         isEnableDown: false
-                        width: cardWidth; height: cardHeight
+//                        width: cardWidth; height: cardHeight
                         anchors.centerIn: parent
-                        front: MultiResolutionImage {
-                            width: cardWidth; height: cardHeight;
-                            source: (code != 0)?"../../assets/pics/"+ code +".jpg":""
-                            anchors.centerIn: parent
-                        }
+                        source: (code != 0)?"../../assets/pics/"+ code +".jpg":""
                         rotation: (position & pos_defence)? 90: 180;
                         flipped: (position & pos_facedown)? true: false;
-                        MultiResolutionImage {
+                        Image {
                             id: monsterZoneEquipImg2
                             fillMode: Image.PreserveAspectFit
                             anchors.fill: parent
@@ -1112,7 +1377,7 @@ SceneBase {
             height: cardHeight + 20
             Component {
                 id: fieldCardZoneDelegate2
-                MultiResolutionImage {
+                Image {
                     source: {
                         if(index === 5) {
                             width = cardHeight + 20;
@@ -1122,23 +1387,19 @@ SceneBase {
                         else
                             return "";
                     }
-                    MultiResolutionImage {
+                    Image {
                         height: cardHeight
                         fillMode: Image.PreserveAspectFit
                         anchors.centerIn: parent
                         source: (index === 5)?"../../assets/img/gs_icon_card_spell.png":""
                         ClientCard {
-                            width: cardWidth; height: cardHeight;
+//                            width: cardWidth; height: cardHeight;
                             anchors.centerIn: parent
                             isEnableDown: false
-                            front: MultiResolutionImage {
-                                width: cardWidth; height: cardHeight;
-                                anchors.centerIn: parent
-                                source : {
-                                    if(index === 5 && code != 0)
-                                        return "../../assets/pics/"+ code +".jpg";
-                                    return "";
-                                }
+                            source: {
+                                if(index === 5 && code != 0)
+                                    return "../../assets/pics/"+ code +".jpg";
+                                return "";
                             }
                             rotation: 180
                         }
@@ -1153,7 +1414,7 @@ SceneBase {
             }
         }
 
-        MultiResolutionImage {
+        Image {
             id: extraCardZone2
             width: cardHeight + 20
             height: cardHeight + 20
@@ -1164,7 +1425,7 @@ SceneBase {
                 right: lscaleCardZone2.right
                 //                left: lscaleCardZone2.left
             }
-            MultiResolutionImage {
+            Image {
                 height: cardHeight
                 fillMode: Image.PreserveAspectFit
                 anchors.centerIn: parent
@@ -1175,14 +1436,19 @@ SceneBase {
                 width: cardWidth; height: cardHeight
                 anchors.centerIn: parent
                 ListView {
+                    id: extraCardZone2List
                     anchors.fill: parent
                     model: clientField.extra2
                     spacing: -cardHeight + 0.5
-                    delegate: MultiResolutionImage {
+                    delegate: Image {
                         width: cardWidth
                         height: cardHeight
                         source: "../../assets/img/0000.png"
                     }
+                }
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: cardSelectDialogBoxBehavior(extraCardZone2List, clientField.extra2, true)
                 }
             }
         }
@@ -1197,15 +1463,20 @@ SceneBase {
 
             Component {
                 id: hand1Delegate
-                ClientCard {
-                    isEnableDown: true
-                    width: cardWidth; height: cardHeight
-                    front: MultiResolutionImage {
-                        id: clientCardImg1
-                        width: cardWidth; height: cardHeight;
+                Column {
+//                    CommandMenu {
+//                        id: hand1CommandMenu
+//                        width: cardWidth
+//                        height: 20
+//                    }
+
+                    ClientCard {
+                        isEnableDown: true
+//                        width: cardWidth; height: cardHeight
                         source: (code != 0)?"../../assets/pics/"+ code +".jpg":""/*:parent.flipped=true*/; //Will issue warning
-                        anchors.centerIn: parent
+//                        onShowMenu: hand1CommandMenu.showMenu(flag)
                     }
+
                 }
             }
 
@@ -1233,13 +1504,8 @@ SceneBase {
                 ClientCard {
                     isEnableDown: true
                     downYBehaviour: true
-                    width: cardWidth; height: cardHeight
-                    front: MultiResolutionImage {
-                        id: clientCardImg2
-                        width: cardWidth; height: cardHeight;
-                        source: (code != 0)?"../../assets/pics/"+ code +".jpg":""/*:parent.flipped=true*/; //Will issue warning
-                        anchors.centerIn: parent
-                    }
+//                    width: cardWidth; height: cardHeight
+                    source: (code != 0)?"../../assets/pics/"+ code +".jpg":""/*:parent.flipped=true*/; //Will issue warning
                 }
             }
 
@@ -1257,7 +1523,17 @@ SceneBase {
     }
 
     DialogBox {
-        id: dialogBox
+        id: messageDialogBox
+        width: 384
+        height: 100
+    }
+
+    DialogBox {
+        id: cardSelectDialogBox
+        width: duelField.width
+        height: 270
+        source: ""
+        offsetX: -40
     }
 
     Connections {
@@ -1278,85 +1554,174 @@ SceneBase {
                 var showCardCode = game.getShowCardCode();
                 switch(showCardCode) {
                 case 1:
-                    dialogBox.activateMessage(qsTr("You Win!"));
+                    messageDialogBox.activateMessage(qsTr("You Win!"));
                     break;
                 case 2:
-                    dialogBox.activateMessage(qsTr("You Lose!"));
+                    messageDialogBox.activateMessage(qsTr("You Lose!"));
                     break;
                 case 3:
-                    dialogBox.activateMessage(qsTr("Draw Game"));
+                    messageDialogBox.activateMessage(qsTr("Draw Game"));
                     break;
                 case 4:
-                    dialogBox.activateMessage(qsTr("Draw Phase"));
+                    messageDialogBox.activateMessage(qsTr("Draw Phase"));
                     break;
                 case 5:
-                    dialogBox.activateMessage(qsTr("Standby Phase"));
+                    messageDialogBox.activateMessage(qsTr("Standby Phase"));
                     break;
                 case 6:
-                    dialogBox.activateMessage(qsTr("Main Phase 1"));
+                    messageDialogBox.activateMessage(qsTr("Main Phase 1"));
                     break;
                 case 7:
-                    dialogBox.activateMessage(qsTr("Battle Phase"));
+                    messageDialogBox.activateMessage(qsTr("Battle Phase"));
                     break;
                 case 8:
-                    dialogBox.activateMessage(qsTr("Main Phase 2"));
+                    messageDialogBox.activateMessage(qsTr("Main Phase 2"));
                     break;
                 case 9:
-                    dialogBox.activateMessage(qsTr("End Phase"));
+                    messageDialogBox.activateMessage(qsTr("End Phase"));
                     break;
                 case 10:
-                    dialogBox.activateMessage(qsTr("Next Players Turn"));
+                    messageDialogBox.activateMessage(qsTr("Next Players Turn"));
                     break;
                 case 11:
-                    dialogBox.activateMessage(qsTr("Duel Start"));
+                    messageDialogBox.activateMessage(qsTr("Duel Start"));
                     break;
                 case 12:
-                    dialogBox.activateMessage(qsTr("Duel1 Start"));
+                    messageDialogBox.activateMessage(qsTr("Duel1 Start"));
                     break;
                 case 13:
-                    dialogBox.activateMessage(qsTr("Duel2 Start"));
+                    messageDialogBox.activateMessage(qsTr("Duel2 Start"));
                     break;
                 case 14:
-                    dialogBox.activateMessage(qsTr("Duel3 Start"));
+                    messageDialogBox.activateMessage(qsTr("Duel3 Start"));
                     break;
                 }
             }
             }
         }
+        onQclientAnalyzeChanged: {
+            switch(duelInfo.getCurMsg()) {
+            case msg_select_idlecmd: {
+                var pbuf = game.getBuffer();
+                if(pbuf){
+                    battleButton.visible = true;
+                    battleButton.isEnabled = true;
+                    battleButton.isPressed = false;
+                }
+                pbuf = game.getBuffer();
+                if(pbuf) {
+                    endButton.visible = true;
+                    endButton.isEnabled = true;
+                    endButton.isPressed = false;
+                }
+                break;
+            }
+
+            case msg_new_phase: {
+                var phase = game.getBuffer();
+                switch(phase) {
+                case phase_draw:
+                    drawButton.visible = true;
+                    break;
+                case phase_standby:
+                    standbyButton.visible = true;
+                    break;
+                case phase_main1:
+                    main1Button.visible = true;
+                    break;
+                case phase_battle:
+                    battleButton.visible = true;
+                    battleButton.isPressed = true;
+                    battleButton.isEnabled = false;
+                    break;
+                case phase_main2:
+                    main2Button.visible = true;
+                    main2Button.isPressed = true;
+                    main2Button.isEnabled = false;
+                    break;
+                case phase_end:
+                    endButton.visible = true;
+                    endButton.isPressed = true;
+                    endButton.isEnabled = false;
+                }
+            }
+            }
+        }
+        onQshowWCardSelectChanged: {
+            cardSelectDialogBox.model = clientField.selectableCards;
+            cardSelectDialogBoxFixed = clientField.selectCancelable();
+            cardSelectDialogBox.slideIn();
+        }
+
     }
 
     Connections {
         target: duelInfo
         onLp1Changed: {
-            if(parseInt(lp1Text.text) > duelInfo.lp1() && duelInfo.lp1() < 8000)
-                progressBar1.x -= progressBar1.width*(1 - duelInfo.lp1()/8000);
-            else if(parseInt(lp1Text.text) > duelInfo.lp1() && duelInfo.lp1() >= 8000)
+            if(parseInt(lp1Text.text) > duelInfo.getLp1() && duelInfo.getLp1() < 8000)
+                progressBar1.x -= progressBar1.width*(1 - duelInfo.getLp1()/8000);
+            else if(parseInt(lp1Text.text) > duelInfo.getLp1() && duelInfo.getLp1() >= 8000)
                 progressBar1.x = player1Image.width;
-            else if(parseInt(lp1Text.text) < duelInfo.lp1() && duelInfo.lp1() < 8000)
-                progressBar1.x += progressBar1.width*(1 - duelInfo.lp1()/8000);
-            else if(parseInt(lp1Text.text) < duelInfo.lp1() && duelInfo.lp1() >= 8000)
+            else if(parseInt(lp1Text.text) < duelInfo.getLp1() && duelInfo.getLp1() < 8000)
+                progressBar1.x += progressBar1.width*(1 - duelInfo.getLp1()/8000);
+            else if(parseInt(lp1Text.text) < duelInfo.getLp1() && duelInfo.getLp1() >= 8000)
                 progressBar1.x = player1Image.width;
-            else if(parseInt(lp1Text.text) === duelInfo.lp1())
+            else if(parseInt(lp1Text.text) === duelInfo.getLp1())
             {}
-            lp1Text.text = duelInfo.lp1();
+            lp1Text.text = duelInfo.getLp1();
         }
         onLp2Changed: {
-            if(parseInt(lp2Text.text) > duelInfo.lp2() && duelInfo.lp2() < 8000)
-                progressBar2.x -= progressBar2.width*(1 - duelInfo.lp2()/8000);
-            else if(parseInt(lp2Text.text) > duelInfo.lp2() && duelInfo.lp2() >= 8000)
+            if(parseInt(lp2Text.text) > duelInfo.getLp2() && duelInfo.getLp2() < 8000)
+                progressBar2.x -= progressBar2.width*(1 - duelInfo.getLp2()/8000);
+            else if(parseInt(lp2Text.text) > duelInfo.getLp2() && duelInfo.getLp2() >= 8000)
                 progressBar2.x = player2Image.width;
-            else if(parseInt(lp2Text.text) < duelInfo.lp2() && duelInfo.lp2() < 8000)
-                progressBar2.x += progressBar2.width*(1 - duelInfo.lp2()/8000);
-            else if(parseInt(lp2Text.text) < duelInfo.lp2() && duelInfo.lp2() >= 8000)
+            else if(parseInt(lp2Text.text) < duelInfo.getLp2() && duelInfo.getLp2() < 8000)
+                progressBar2.x += progressBar2.width*(1 - duelInfo.getLp2()/8000);
+            else if(parseInt(lp2Text.text) < duelInfo.getLp2() && duelInfo.getLp2() >= 8000)
                 progressBar2.x = player2Image.width;
-            else if(parseInt(lp2Text.text) === duelInfo.lp2())
+            else if(parseInt(lp2Text.text) === duelInfo.getLp2())
             {}
-            lp2Text.text = duelInfo.lp2();
+            lp2Text.text = duelInfo.getLp2();
         }
         onClientNameChanged: {
-            clientname = duelInfo.clientName();
+            clientname = duelInfo.getClientName();
         }
     }
+
+    Connections {
+        target: clientField
+        onDeckActivateChanged: {
+            if(clientField.getDeckAct())
+                deckRotationAnimation.visible = true
+            else
+                deckRotationAnimation.visible = false;
+        }
+        onGraveActivateChanged: {
+            if(clientField.getGraveAct())
+                graveRotationAnimation.visible = true;
+            else
+                graveRotationAnimation.visible = false;
+        }
+        onRemovedActivateChanged: { //TODO:: add animation to removed
+            if(clientField.getRemovedAct())
+                removedRotationAnimation.visible = true;
+            else
+                removedRotationAnimation.visible = false;
+        }
+        onExtraActivatedChanged: {
+            if(clientField.getExtraAct())
+                extraRotationAnimation.visible = true;
+            else
+                extraRotationAnimation.visible = false;
+        }
+        onPzoneActivatedChanged: {  //TODO:: add animation to pzone
+            if(clientField.getPzoneAct())
+                pzoneRotationAnimation.visible = true;
+            else
+                pzoneRotationAnimation.visible = false;
+        }
+    }
+
     onExitClicked: {
         progressBar1.x = player1Image.width;
         lp1Text.text = "8000";

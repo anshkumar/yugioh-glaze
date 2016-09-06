@@ -67,9 +67,9 @@ void SingleMode::singlePlayStart()
     }
     qDebug()<<"SingleMode game script loaded successfully";
     //Initialze the field to start the game
-    mainGame->dInfo.isFirst = true;
-    mainGame->dInfo.isStarted = true;
-    mainGame->dInfo.isSingleMode = true;
+    mainGame->dInfo.is_first = true;
+    mainGame->dInfo.is_started = true;
+    mainGame->dInfo.is_singleMode = true;
     mainGame->dField.hovered_card = 0;
     mainGame->dField.clicked_card = 0;
 //    mainGame->dField.Clear();
@@ -98,8 +98,8 @@ void SingleMode::singlePlayStart()
     end_duel(pduel);
     if(is_closing) {
         //Game ended; do the necessary resetting
-        mainGame->dInfo.isStarted = false;
-        mainGame->dInfo.isSingleMode = false;
+        mainGame->dInfo.is_started = false;
+        mainGame->dInfo.is_singleMode = false;
     }
     emit finished();
 }

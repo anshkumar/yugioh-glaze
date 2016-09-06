@@ -1,13 +1,23 @@
 import QtQuick 2.0
 
-Flipable {
-    id: flipable
+Rectangle {
+    id: cCard
+
+    /*
+Delegates are instantiated as needed by the system and can be destroyed at any time - even while scrolling the list.
+So it is not safe to store state information only in the delegate.
+*/
 
     property bool flipped: false
     property bool isEnableDown: false
     property bool downYBehaviour: false
     property bool inside: false
     signal showInfo
+    signal itemClicked(string slot)
+    property int cWidth: cardWidth
+    property int cHeight: cardHeight
+    //    signal showMenu(variant flag)
+    property string source: ""
 
     //Type
     property int type_monster: 0x1
@@ -89,38 +99,224 @@ Flipable {
     property int location_fzone: 0x100
     property int location_pzone: 0x200
 
-    back: Image {
-        width: parent.width; height: parent.height
-        source: "../../assets/img/0000.png"
-        anchors.centerIn: parent
+    //enum used in clientCardModel
+    property int codeRole :              0x0101
+    property int aliasRole:              0x0102
+    property int baseTypeRole:           0x0103
+    property int baseLevelRole:          0x0104
+    property int baseRankRole:           0x0105
+    property int baseAttributeRole:      0x0106
+    property int baseRaceRole:           0x0107
+    property int baseAttackRole:         0x0108
+    property int baseDefenceRole:        0x0109
+    property int baseLscaleRole:         0x010a
+    property int baseRscaleRole:         0x010b
+    property int nameRole:               0x010c
+    property int formatTypeRole:         0x010d
+    property int textRole:               0x010e
+    property int typeRole:               0x010f
+    property int levelRole:              0x0110
+    property int rankRole:               0x0111
+    property int attributeRole:          0x0112
+    property int raceRole:               0x0113
+    property int attackRole:             0x0114
+    property int defenceRole:            0x0115
+    property int lscaleRole:             0x0116
+    property int rscaleRole:             0x0117
+    property int controlerRole:          0x0118
+    property int locationRole:           0x0119
+    property int positionRole:           0x011a
+    property int isDisabledRole:         0x011b
+    property int cmdFlagRole:            0x011c
+    property int overlayedSizeRole:      0x011d
+    property int equipTargetController:  0x011e
+    property int equipTargetLocation:    0x011f
+    property int equipTargetSequence:    0x0120
+    property int isSelectableRole:       0x0121
+    property int isSelectedRole:         0x0122
+    property int selectSeqRole:          0x0123
+    property int opParamRole:            0x0124
+
+    property int command_activate:	0x0001
+    property int command_summon:	0x0002
+    property int command_spsummon:	0x0004
+    property int command_mset:		0x0008
+    property int command_sset:		0x0010
+    property int command_repos:		0x0020
+    property int command_attack:	0x0040
+    property int command_list:		0x0080  //Show list to view underlayed cards like to view garve and deck cards
+
+
+    width: cardWidth + 5
+    height: cardHeight + 5
+    border.color: isSelectable?"#00fbff":"transparent"
+    border.width: 5
+    color: "transparent"
+    radius: 2
+
+    ListModel {
+        id: menuListModel
     }
 
-    transform: Rotation {
-        id: rotation
-        origin.x: flipable.width/2
-        origin.y: flipable.height/2
-        axis.x: 0; axis.y: 1; axis.z: 0     // set axis.y to 1 to rotate around y-axis
-        angle: 0    // the default angle
-    }
-
-    states: State {
-        name: "back"
-        PropertyChanges { target: rotation; angle: 180 }
-        when: flipable.flipped
-    }
-
-    transitions: Transition {
-        NumberAnimation { target: rotation; property: "angle"; duration: 200 }
-    }
-
-    Timer {
-        id: desTimer
-        interval: 500
-        onTriggered: {
-            if(inside === true)
-                parent.showInfo();
+    Component {
+        id: menuListdelegate
+        Rectangle {
+            width: cardWidth + 50
+            height: 20
+            color: "blue"
+            Text {
+                anchors.fill: parent
+                anchors.centerIn: parent
+                text: commandText
+            }
+            MouseArea
+            {
+                anchors.fill: parent
+                onClicked: {
+                    if(model.slot)
+                        itemClicked(slot)
+                }
+            }
         }
     }
+
+    ListView {
+        id: list
+        //            visible: card.activeFocus
+        model: menuListModel
+        anchors.bottom: parent.top
+        width: cCard.width
+        delegate: menuListdelegate
+        interactive: false
+        height: childrenRect.height
+    }
+
+    onFocusChanged: {
+        if(!cCard.focus)
+            menuListModel.clear();
+    }
+
+    onItemClicked: { this[slot]() }
+
+    function showMenu(flag) {
+        if(cCard.focus) {
+            if(flag & command_activate)
+                menuListModel.append({"commandText" : "Activate", "slot": "activate"});
+            if(flag & command_summon)
+                menuListModel.append({"commandText" : "Normal Summon", "slot": "nSummon"});
+            if(flag & command_spsummon)
+                menuListModel.append({"commandText" : "Special Summon", "slot": "sSummon"});
+            if(flag & command_mset)
+                menuListModel.append({"commandText" : "Set", "slot": "set"});
+            if(flag & command_sset)
+                menuListModel.append({"commandText" : "Set", "slot": "set"});
+            if(flag & command_repos) {
+                if(position & pos_facedown)
+                    menuListModel.append({"commandText" : "Flip Summon", "slot": "fSummon"});
+                else if(position & pos_attack)
+                    menuListModel.append({"commandText" : "To Defense", "slot": "toDefense"});
+                else
+                    menuListModel.append({"commandText" : "To Attack", "slot": "toAttack"});
+            }
+            if(flag & command_attack)
+                menuListModel.append({"commandText" : "Attack", "slot": "attack"});
+            if(flag & command_list)
+                menuListModel.append({"commandText" : "View", "slot": "view"});
+        }
+    }
+
+    function activate() {
+        menuListModel.clear();
+        cCard.focus = !cCard.focus;
+    }
+
+    function nSummon() {
+        menuListModel.clear();
+        cCard.focus = !cCard.focus;
+        for(var i = 0; i < clientField.summonableCards.size(); ++i) {
+            if(clientField.summonableCards.at(i) === card) {
+                clientField.clearCommandFlag();
+                game.setResponseI(i << 16);
+                game.sendResponse();
+            }
+        }
+    }
+
+    function sSummon() {
+        menuListModel.clear();
+        cCard.focus = !cCard.focus;
+    }
+
+    function set() {
+        menuListModel.clear();
+        cCard.focus = !cCard.focus;
+    }
+
+    function fSummon() {
+        menuListModel.clear();
+        cCard.focus = !cCard.focus;
+    }
+
+    function toDefense() {
+        menuListModel.clear();
+        cCard.focus = !cCard.focus;
+    }
+
+    function toAttack() {
+        menuListModel.clear();
+        cCard.focus = !cCard.focus;
+    }
+
+    function attack() {
+        menuListModel.clear();
+        cCard.focus = !cCard.focus;
+    }
+
+    function view() {
+        menuListModel.clear();
+        cCard.focus = !cCard.focus;
+    }
+
+    Flipable {
+        id: flipable
+
+        width: cWidth
+        height: cHeight
+        anchors.centerIn: parent
+
+        back: Image {
+            width: cWidth; height: cHeight
+            source: "../../assets/img/0000.png"
+            anchors.centerIn: parent
+        }
+
+        front: Image {
+            id: frontImg
+            width: cWidth; height: cHeight;
+            anchors.centerIn: parent
+            source : cCard.source
+        }
+
+        transform: Rotation {
+            id: rotation
+            origin.x: flipable.width/2
+            origin.y: flipable.height/2
+            axis.x: 0; axis.y: 1; axis.z: 0     // set axis.y to 1 to rotate around y-axis
+            angle: 0    // the default angle
+        }
+
+        states: State {
+            name: "back"
+            PropertyChanges { target: rotation; angle: 180 }
+            when: cCard.flipped
+        }
+
+        transitions: Transition {
+            NumberAnimation { target: rotation; property: "angle"; duration: 200 }
+        }
+    }
+
+    onSourceChanged: {frontImg.source = source;}
 
     MouseArea {
         anchors.fill: parent
@@ -140,7 +336,149 @@ Flipable {
             inside = false;
             parent.y = 0 ;
         }
-//        onClicked: flipable.flipped = !flipable.flipped
+        onClicked: {
+            cCard.focus = !cCard.focus;
+            if(duelInfo.isreplay) {
+                //TODO: add code
+            }
+            if(duelInfo.playerType() === 7) {
+                //TODO: add code
+            }
+            if(location & 0xe) {
+                switch(duelInfo.getCurMsg()) {
+                case msg_waiting: {
+                    switch(location) {
+                    case location_mzone:
+                    case location_szone: {
+                        if(overlayedSize === 0)
+                            break;
+                        showMenu(command_list);
+                        break;
+                    }
+                    }
+                    break;
+                }
+                case msg_select_battlecmd:
+                case msg_select_idlecmd:
+                case msg_select_chain: {
+                    switch(location) {
+                    case location_hand:
+                    case location_mzone:
+                    case location_szone: {
+                        var command_flag = cmdFlag;
+                        if(overlayedSize)
+                            command_flag |= command_list;
+                        showMenu(command_flag);
+                        break;
+                    }
+                    }
+                    break;
+                }
+                case msg_select_place:
+                case msg_select_disfield: {
+                    //TODO: add code
+                    break;
+                }
+                case msg_select_card:
+                case msg_select_tribute: {
+                    if( !(location & 0xe) || !isSelectable )
+                        break;
+                    if(isSelected === true) {
+                        isSelected = false;
+                        gameScene.deselectCard(selectSeq);
+                    }
+                    else {
+                        isSelected = true;
+                        gameScene.selectCard({'opParam': opParam, 'selectSeq': selectSeq});
+                    }
+                    var min = gameScene.selectedCards.length, max = 0;
+                    if(duelInfo.getCurMsg() === msg_select_card)
+                        max = gameScene.selectedCards.length;
+                    else
+                        for(var i = 0; i < gameScene.selectedCards.length; i += 1)
+                            max += gameScene.selectedCards[i].opParam;
+                    if(min >= clientField.getSelectMax()) {
+                        var respBuf = [];
+                        respBuf[0] = gameScene.selectedCards.length;
+                        for( var i = 0; i <= gameScene.selectedCards.length; i += 1)
+                            respBuf[i + 1] = gameScene.selectedCards[i].selectSeq;
+                        game.setResponseB(respBuf, gameScene.selectedCards.length + 1)
+                        game.sendResponse();
+                    } else if(max >= clientField.getSelectMin()) {
+                        if(gameScene.selectedCards.length === clientField.selectableCards.size()) {
+                            var respBuf = [];
+                            respBuf[0] = gameScene.selectedCards.length;
+                            for( var i = 0; i <= gameScene.selectedCards.length; i += 1)
+                                respBuf[i + 1] = gameScene.selectedCards[i].selectSeq;
+                            game.setResponseB(respBuf, gameScene.selectedCards.length + 1)
+                            game.sendResponse();
+                        } else {
+                            gameScene.selectReady = true;
+                            if(duelInfo.getCurMsg() === msg_select_tribute) {
+                                //TODO: add query window with stings 209 and 210
+                            }
+                        }
+                    }else {
+                        gameScene.selectReady = false;
+                    }
+                    break;
+                }
+                case msg_select_counter: {
+                    if(!isSelectable)
+                        break;
+                    opParam = opParam - 1;
+                    if( (opParam & 0xffff) === 0)
+                        isSelectable = false;
+                    clientField.setSelectCounterCount(clientField.getSelectCounterCount() - 1 );
+                    if(clientField.getSelectCounterCount() === 0) {
+                        var respBuf = [];
+                        for(var i = 0; i <= clientField.selectableCards.size(); i += 1)
+                            respBuf[i] = (clientField.selectableCards.getData(i, opParamRole) >> 16) - (clientField.selectableCards.getData(i, opParamRole) & 0xffff);
+                        //TODO: stHintMsg visibility = false
+                        clientField.clearSelect();
+                        game.setResponseB(respBuf, clientField.selectableCards.size());
+                        game.sendResponse();
+                    } else {
+                        //TODO: stHintMsg   string 204
+                    }
+                    break;
+                }
+                case msg_select_sum: {
+                    if(isSelected) {
+                        var i = 0;
+                        gameScene.deselectCard(selectSeq);
+                    } else if(isSelectable)
+                        gameScene.selectCard({'opParam': opParam, 'selectSeq': selectSeq});
+                    else
+                        break;
+                    if(clientField.checkSelectSum()) {
+                        if(clientField.selectsumCards.size() === 0 || clientField.selectableCards.size() === 0) {
+                            var respBuf = [];
+                            respBuf[0] = gameScene.selectedCards.length;
+                            for(var i = 0; i < gameScene.selectedCards.length; i += 1)
+                                respBuf[i + 1] = gameScene.selectedCards[i].selectSeq;
+                            game.setResponseB(respBuf, gameScene.selectedCards.length + 1);
+                            game.sendResponse();
+                        } else {
+                            gameScene.selectReady = true;
+                            //TODO: add query window with stings 209 and 210
+                        }
+                    } else
+                        gameScene.selectReady = false;
+                    break;
+                }
+                }
+            }
+        }
+    }
+
+    Timer {
+        id: desTimer
+        interval: 500
+        onTriggered: {
+            if(inside === true)
+                parent.showInfo();
+        }
     }
 
     Behavior on y {
@@ -152,7 +490,7 @@ Flipable {
             desCardImg.source = "../../assets/pics/"+ code +".jpg";
             cardName.text = name;
             cardType.text = formatType;
-            desText.text = showingText;            
+            desText.text = showingText;
             if(baseType & type_monster) {
                 if(baseAttack >= 0)
                     desAtk.text = "ATK/" + baseAttack;
@@ -353,4 +691,5 @@ Flipable {
             }
         }
     }
+
 }

@@ -14,8 +14,7 @@ class DuelClient : public QObject
     Q_OBJECT
 
 //    static unsigned int connect_state;
-    static unsigned char response_buf[64];
-    static unsigned char response_len;
+
 //    static unsigned int watching;
 //    static unsigned char selftype;
 //    static bool is_host;
@@ -71,6 +70,8 @@ protected:
 //    static std::set<unsigned int> remotes;
 
 public:
+    static unsigned char response_buf[64];
+    static unsigned char response_len;
 //    static std::vector<HostPacket> hosts;
 //    static void BeginRefreshHost();
 //    static int RefreshThread(void* arg);

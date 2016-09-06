@@ -32,12 +32,12 @@ class DuelInfo : public QObject {
 public:
 	explicit DuelInfo(QObject *parent = 0);
 
-    bool isStarted;
-    bool isReplay;
-    bool isReplaySkiping;
-    bool isFirst;
-    bool isTag;
-    bool isSingleMode;
+    bool is_started; //TODO: discard its usage
+    bool is_replay;
+    bool is_replaySkiping;
+    bool is_first;
+    bool is_tag;
+    bool is_singleMode;
     bool is_shuffling;
     bool tag_player[2];
     int lp[2];
@@ -56,16 +56,32 @@ public:
     unsigned short time_left[2];
 
 public slots:
-    int lp1() {
+    int getLp1() {
         return lp[0];
     }
 
-    int lp2() {
+    int getLp2() {
         return lp[1];
     }
 
-    QString clientName() {
+    QString getClientName() {
         return QString::fromWCharArray(clientname);
+    }
+
+    int getCurMsg() {
+        return curMsg;
+    }
+
+    bool isReplay() {
+        return is_replay;
+    }
+
+    int playerType() {
+        return player_type;
+    }
+
+    bool isSingleMode() {
+        return is_singleMode;
     }
 
 signals:
@@ -94,6 +110,10 @@ public:
     Q_INVOKABLE void mySet();
     Q_INVOKABLE int getShowCardCode();
     Q_INVOKABLE int getShowCard();
+    Q_INVOKABLE int getBuffer();
+    Q_INVOKABLE void setResponseI(int respI);
+    Q_INVOKABLE static void setResponseB(QList<int> respB, unsigned char len);
+    Q_INVOKABLE static void sendResponse();
 
 //    void setQstMessage(QString);
     bool qstHintMsg();
@@ -134,9 +154,10 @@ public:
     SignalWaiter singleSignal;
     SignalWaiter invokeMethodSignal;
 
+    QVector<int> buffer;
     bool win;
-    int showcard;
-    int showcardcode;
+    QVector<int> showcard;
+    QVector<int> showcardcode;
     int showcarddif;
     int showcardp;
     bool always_chain;
@@ -187,7 +208,7 @@ public:
     bool btnJoinCancel;
     bool btnCreateHost;
 
-    //phase button
+    //phase button  //TODO: move completly to qml
     bool wPhase;
     bool btnDP;
     bool btnSP;
@@ -238,6 +259,8 @@ signals:
     void qwANRaceChanged();
     void qwinChanged();
     void qshowCardChanged();
+    void qclientAnalyzeChanged();
+    void qshowWCardSelectChanged();
 };
 
 extern Game* mainGame;

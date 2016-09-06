@@ -43,6 +43,9 @@ class ClientField : public SingleMode
     Q_PROPERTY(ClientCardModel* remove2 READ remove2 CONSTANT)
     Q_PROPERTY(ClientCardModel* extra1 READ extra1 CONSTANT)
     Q_PROPERTY(ClientCardModel* extra2 READ extra2 CONSTANT)
+    Q_PROPERTY(ClientCardModel* selectableCards READ selectableCards CONSTANT)
+    Q_PROPERTY(ClientCardModel* selectsumCards READ selectsumCards CONSTANT)
+    Q_PROPERTY(ClientCardModel* summonableCards READ summonableCards CONSTANT)
 
 public:
     ClientField();
@@ -63,6 +66,9 @@ public:
     ClientCardModel *extra1();
     ClientCardModel *extra2();
     ClientCardModel *Overlay_cards();
+    ClientCardModel *selectableCards();
+    ClientCardModel *selectsumCards();
+    ClientCardModel *summonableCards();
 
     bool qwShowSelectCard();
     bool qwShowChainCard();
@@ -92,25 +98,25 @@ public:
     int disabled_field;
     int selectable_field;
     int selected_field;
-    int select_min;
-    int select_max;
+    int select_min; //QML used
+    int select_max; //QML used
     int select_sumval;
-    int select_cancelable;
+    int select_cancelable;  //QML used
     int select_mode;
-    bool select_ready;
+    bool select_ready;  //QML used
     int announce_count;
-    int select_counter_count;
+    int select_counter_count;   //QML used
     int select_counter_type;
-    ClientCardModel selectable_cards;
-    ClientCardModel selected_cards;
-    QSet<ClientCard*> selectsum_cards;
+    ClientCardModel selectable_cards;   //QML used
+    ClientCardModel selected_cards; //TODO: remove it usage; implicit implementation in qml
+    ClientCardModel selectsum_cards;
     ClientCardModel selectsum_all;
     QList<int> sort_list;
-    bool grave_act;
-    bool remove_act;
-    bool deck_act;
-    bool extra_act;
-    bool pzone_act;
+    bool grave_act; //QML used
+    bool remove_act;    //QML used
+    bool deck_act;  //QML used
+    bool extra_act; //QML used
+    bool pzone_act; //QML used
     bool chain_forced;
     ChainInfo current_chain;
     bool last_chain;
@@ -125,9 +131,8 @@ public:
     void Initial(int player, int deckc, int extrac);
     ClientCard* GetCard(int controler, int location, int sequence, int sub_seq = 0);
     ClientCard* RemoveCard(int controler, int location, int sequence);
+    ClientCardModel* getClientCardModelPtr(int controler, int location);
 
-    void ClearCommandFlag();
-    void ClearSelect();
     void ClearChainSelect();
     void ShowSelectCard(bool buttonok = false);
     void ShowChainCard();
@@ -137,8 +142,7 @@ public:
     void GetChainLocation(int controler, int location, int sequence, QVector3D* t);
 //    void GetCardLocation(ClientCard* pcard, QVector3D* t, QVector3D* r, bool setTrans = false);
     void MoveCard(ClientCard* pcard, int frame);
-    void FadeCard(ClientCard* pcard, int alpha, int frame);
-    bool CheckSelectSum();
+    void FadeCard(ClientCard* pcard, int alpha, int frame);    
     bool check_min(QSet<ClientCard*>& left, QSet<ClientCard*>::iterator index, int min, int max);
     bool check_sel_sum_s(QSet<ClientCard*>& left, int index, int acc);
     void check_sel_sum_t(QSet<ClientCard*>& left, int acc);
@@ -189,6 +193,23 @@ public slots:
     void SinglePlayRefreshExtra(int player, int flag = 0x181fff);
     void SinglePlayRefreshSingle(int player, int location, int sequence, int flag = 0x781fff);
     void SinglePlayReload();
+    void clearSelect();
+    bool checkSelectSum();
+    void clearCommandFlag();
+
+    //QML getters
+    int selectCancelable();
+    bool getDeckAct();
+    bool getGraveAct();
+    bool getRemovedAct();
+    bool getExtraAct();
+    bool getPzoneAct();
+    int getSelectMax();
+    int getSelectMin();
+    int getSelectCounterCount();
+
+    //QML setter
+    void setSelectCounterCount(int value);
 
 signals:
     void clearFinished();
@@ -202,6 +223,13 @@ signals:
     void singlePlayRefreshExtraFinished();
     void singlePlayRefreshSingleFinished();
     void singlePlayReloadFinished();
+
+    //QML Notifiers
+    void deckActivateChanged();
+    void graveActivateChanged();
+    void removedActivateChanged();
+    void extraActivatedChanged();
+    void pzoneActivatedChanged();
 
 //    virtual bool OnEvent(const irr::SEvent& event);
 //	void GetHoverField(int x, int y);

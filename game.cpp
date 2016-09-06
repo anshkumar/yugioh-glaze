@@ -3,6 +3,7 @@
 #include <time.h>
 #include "game.h"
 #include "datamanager.h"
+#include "duelclient.h"
 
 #ifdef _WIN32
 #include <io.h>
@@ -21,12 +22,12 @@ Game* mainGame = 0;
 DuelInfo::DuelInfo(QObject *parent):
     QObject(parent)
 {
-    isStarted = false;
-    isReplay = false;
-    isReplaySkiping = false;
-    isFirst = false;
-    isTag = false;
-    isSingleMode = false;
+    is_started = false;
+    is_replay = false;
+    is_replaySkiping = false;
+    is_first = false;
+    is_tag = false;
+    is_singleMode = false;
     is_shuffling = false;
     tag_player[0] = false;
     tag_player[1] = false;
@@ -291,11 +292,44 @@ bool Game::qwin()
 }
 
 int Game::getShowCardCode() {
-    return showcardcode;
+    if(!showcardcode.isEmpty()) {
+        int value = showcardcode.first();
+        showcardcode.pop_front();
+        return value;
+    }
+    return 0;
 }
 
 int Game::getShowCard() {
-    return showcard;
+    if(!showcard.isEmpty()) {
+        int value = showcard.first();
+        showcard.pop_front();
+        return value;
+    }
+    return 0;
+}
+
+int Game::getBuffer() {
+    if(!buffer.isEmpty()) {
+        int value = buffer.first();
+        buffer.pop_front();
+        return value;
+    }
+    return 0;
+}
+
+void Game::setResponseI(int respI) {
+    DuelClient::SetResponseI(respI);
+}
+
+void Game::setResponseB(QList<int> respB, unsigned char len) {
+    for(int i = 0; i < len; i++)
+        DuelClient::response_buf[i] = respB[i];
+    DuelClient::response_len = len;
+}
+
+void Game::sendResponse() {
+    DuelClient::SendResponse();
 }
 
 void Game::AddChatMsg(wchar_t* msg, int player) {
@@ -342,7 +376,7 @@ void Game::AddChatMsg(wchar_t* msg, int player) {
 }
 
 int Game::LocalPlayer(int player) {
-    return dInfo.isFirst ? player : 1 - player;
+    return dInfo.is_first ? player : 1 - player;
 }
 const wchar_t* Game::LocalName(int local_player) {
     return local_player == 0 ? dInfo.hostname : dInfo.clientname;

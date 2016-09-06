@@ -4,6 +4,7 @@
 #include "game.h"
 #include <QThread>
 #include <QDebug>
+#include <QtAlgorithms>
 
 namespace glaze {
 
@@ -20,7 +21,7 @@ int ClientCardModel::rowCount(const QModelIndex &parent) const {
 
 QVariant ClientCardModel::data(const QModelIndex &index, int role) const {
     if (index.row() < 0 || index.row() >= m_list.count())
-            return QVariant();
+        return QVariant();
     const ClientCard *clientCard = m_list[index.row()];
     CardData cd;
     ClientCardModel* lst = 0;
@@ -28,7 +29,7 @@ QVariant ClientCardModel::data(const QModelIndex &index, int role) const {
     if(!clientCard)
         return 0;
     if(!dataManager.GetData(clientCard->code, &cd))
-            memset(&cd, 0, sizeof(CardData));
+        memset(&cd, 0, sizeof(CardData));
 
     QString formatBuffer;
     switch(clientCard->location) {
@@ -91,7 +92,7 @@ QVariant ClientCardModel::data(const QModelIndex &index, int role) const {
         break;
     case NameRole:
         if(cd.alias != 0 && (cd.alias - clientCard->code < 10 || clientCard->code - cd.alias < 10))
-             formatBuffer = QString::fromWCharArray(dataManager.GetName(cd.alias));
+            formatBuffer = QString::fromWCharArray(dataManager.GetName(cd.alias));
         else
             formatBuffer = QString::fromWCharArray(dataManager.GetName(clientCard->code));
         return formatBuffer;
@@ -132,6 +133,9 @@ QVariant ClientCardModel::data(const QModelIndex &index, int role) const {
     case RscaleRole:
         return clientCard->rscale;
         break;
+    case ControlerRole:
+        return clientCard->controler;
+        break;
     case LocationRole:
         return clientCard->location;
         break;
@@ -144,6 +148,9 @@ QVariant ClientCardModel::data(const QModelIndex &index, int role) const {
     case CmdFlagRole:
         return clientCard->cmdFlag;
         break;
+    case OverlayedSizeRole:
+        return clientCard->overlayed.size();
+        break;
     case EquipTargetController:
         return clientCard->equipTarget->controler;
         break;
@@ -153,11 +160,65 @@ QVariant ClientCardModel::data(const QModelIndex &index, int role) const {
     case EquipTargetSequence:
         return clientCard->equipTarget->sequence;
         break;
+    case IsSelectableRole:
+        return clientCard->is_selectable;
+        break;
+    case IsSelectedRole:
+        return clientCard->is_selected;
+        break;
+    case SelectSeqRole:
+        return clientCard->select_seq;
+        break;
+    case OpParamRole:
+        return clientCard->opParam;
+        break;
+    case cardRole:
+        return clientCard;
+        break;
     default:
         break;
     }
     return QVariant();
 }
+
+Qt::ItemFlags ClientCardModel::flags(const QModelIndex &index) const
+{
+    if (!index.isValid())
+        return Qt::ItemIsEnabled;
+
+    return QAbstractItemModel::flags(index) | Qt::ItemIsEditable;
+}
+
+bool ClientCardModel::setData(const QModelIndex &index, const QVariant &value, int role)
+{
+    if (index.isValid()) {
+        ClientCard *clientCard = m_list[index.row()];
+        if(!clientCard)
+            return 0;
+        switch (role) {
+        case IsSelectableRole:
+            clientCard->is_selectable = value.toBool();
+//            qDebug()<<"ClientCard->is_selectable set to = "<<value.toBool();
+            emit dataChangedSignal(index.row(), QVector<int>(1,role));
+            break;
+        case IsSelectedRole:
+            clientCard->is_selected = value.toBool();
+//            qDebug()<<"ClientCard->is_selected set to = "<<value.toBool();
+            emit dataChangedSignal(index.row(), QVector<int>(1,role));
+            break;
+        case OpParamRole:
+            clientCard->opParam = value.toUInt();
+//            qDebug()<<"ClientCard->opParam set to = "<<value.toUInt();
+            emit dataChangedSignal(index.row(), QVector<int>(1,role));
+            break;
+        default:
+            break;
+        }
+        return true;
+    }
+    return false;
+}
+
 
 void ClientCardModel::dataChangedSignal() {
     QModelIndex top = createIndex(0, 0);
@@ -165,9 +226,9 @@ void ClientCardModel::dataChangedSignal() {
     emit dataChanged(top, bottom);
 }
 
-void ClientCardModel::dataChangedSignal(int sequence) {
+void ClientCardModel::dataChangedSignal(int sequence, const QVector<int> &roles) {
     QModelIndex index = createIndex(sequence, 0);
-    emit dataChanged(index, index);
+    emit dataChanged(index, index, roles);
 }
 
 QHash<int, QByteArray> ClientCardModel::roleNames() const{
@@ -195,13 +256,20 @@ QHash<int, QByteArray> ClientCardModel::roleNames() const{
     roles[DefenceRole] = "defence";
     roles[LscaleRole] = "lscale";
     roles[RscaleRole] = "rscale";
+    roles[ControlerRole] = "controler";
     roles[LocationRole] = "location";
     roles[PositionRole] = "position";
     roles[IsDisabledRole] = "isDisabled";
     roles[CmdFlagRole] = "cmdFlag";
+    roles[OverlayedSizeRole] = "overlayedSize";
     roles[EquipTargetController] = "equipTargetController";
     roles[EquipTargetLocation] = "equipTargetLocation";
     roles[EquipTargetSequence] = "equipTargetSequence";
+    roles[IsSelectableRole] = "isSelectable";
+    roles[IsSelectedRole] = "isSelected";
+    roles[SelectSeqRole] = "selectSeq";
+    roles[OpParamRole] = "opParam";
+    roles[cardRole] = "card";
     return roles;
 }
 
@@ -217,6 +285,10 @@ QList<ClientCard*>::iterator ClientCardModel::end() {
     return 0;
 }
 
+QList<ClientCard*>::const_iterator ClientCardModel::find(ClientCard *value) {
+    return qFind(m_list,value);
+}
+
 void ClientCardModel::clear() {
     beginResetModel();
     m_list.clear();
@@ -227,11 +299,38 @@ void ClientCardModel::push_back(ClientCard *card) {
     beginInsertRows(QModelIndex(), rowCount(), rowCount());
     m_list << card;
     endInsertRows();
-//    emit pushBackFinished();
+    //    emit pushBackFinished();
 }
 
 int ClientCardModel::size() const {
     return m_list.size();
+}
+
+QVariant ClientCardModel::getData(int index, int role) {
+    if (index < 0 || index >= m_list.count())
+        return QVariant();
+    const ClientCard *clientCard = m_list[index];
+    if(!clientCard)
+        return 0;
+    switch (role) {
+    case CodeRole:
+        return clientCard->code;
+        break;
+    case IsSelectableRole:
+        return clientCard->is_selectable;
+        break;
+    case IsSelectedRole:
+        return clientCard->is_selected;
+        break;
+    case SelectSeqRole:
+        return clientCard->select_seq;
+        break;
+    case OpParamRole:
+        return clientCard->opParam;
+        break;
+    default:
+        break;
+    }
 }
 
 QList<ClientCard*>::iterator ClientCardModel::erase(const myIter iter) {
@@ -261,6 +360,10 @@ void ClientCardModel::swap(ClientCardModel &other) {
 }
 
 ClientCard* &ClientCardModel::operator [](int i) {
+    return m_list[i];
+}
+
+ClientCard* ClientCardModel::at(int i) {
     return m_list[i];
 }
 
